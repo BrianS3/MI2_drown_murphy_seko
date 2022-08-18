@@ -1,1 +1,8 @@
-print("Hello you've initated this package")
+print("gps_695 package load")
+import pip
+
+try:
+    __import__(dotenv)
+except:
+    pip.main(['install', 'python-dotenv'])
+
