@@ -7,10 +7,11 @@ from gps_695 import package_helpers
 
 #database_helpers.test()
 
-package_helpers.create_env_variables()
+# package_helpers.create_env_variables()
 
 package_helpers.load_env_credentials()
 mysql_username, mysql_pass = package_helpers.get_mysql_user_pass()
 
 print(mysql_username)
 print(mysql_pass)
+

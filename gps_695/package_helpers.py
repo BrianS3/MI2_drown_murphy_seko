@@ -1,10 +1,10 @@
-def create_env_variables():
+def create_env_variables(db_user, db_pass, api_bearer):
     with open(".env", "w") as f:
-        username = input("Enter DB Username: ")
-        f.write(f"mysql_username={username}")
+        f.write(f"mysql_username={db_user}")
         f.write("\n")
-        passw = input("Enter DB Password: ")
-        f.write(f"mysql_pass={passw}")
+        f.write(f"mysql_pass={db_pass}")
+        f.write("\n")
+        f.write(f"twitter_bearer={api_bearer}")
 
 def load_env_credentials():
     import os
@@ -22,5 +22,7 @@ def get_mysql_user_pass():
     (k,v) = (os.getenv('mysql_username'), os.getenv('mysql_pass'))
     return (k,v)
 
-def another_test():
-    print('test')
+def get_twitter_api_bearer():
+    import os
+    api_b = os.getenv('twitter_bearer')
+    return api_b
