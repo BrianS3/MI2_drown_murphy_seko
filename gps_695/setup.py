@@ -8,4 +8,10 @@ setup(name='gps_695',
       author_email='bseko@umich.edu',
       license='MIT',
       packages=['gps_695'],
+      install_requires=[
+            'pip',
+            'json',
+            'dotenv',
+            'requests'
+      ],
       zip_safe=False)
