@@ -1,6 +1,6 @@
 import gps_695
-from gps_695 import database_helpers
-from gps_695 import package_helpers
+from gps_695 import database
+from gps_695 import package
 # import os
 
 # package_helpers.create_env_variables()
