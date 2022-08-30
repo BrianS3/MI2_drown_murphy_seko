@@ -1,8 +1,60 @@
-def create_mysql_database(hostname):
+def connect_to_database():
+    """
+    Creates connection to mysql database.
+    :return: connection objects
+    """
+    from gps_695 import credentials as c
+    import mysql
+    from mysql.connector import connect, Error
+    c.load_env_credentials()
+    credential_list = c.get_mysql_credentials()
+
+    cnx = mysql.connector.connect(user=f'{credential_list[0]}',password=f'{credential_list[1]}',host=f'{credential_list[2]}',database=f"{credential_list[3]}")
+    return cnx
+
+def create_mysql_database():
     """
     Function creates mysql database to store twitter data
     :return: None
     """
+    from gps_695 import database as d
+    import mysql
+    # from mysql.connector import connect, Error
+
+    file = open('gps_695/database_table_creation.sql', 'r')
+    sql = file.read()
+    file.close
+
+    cnx = d.connect_to_database()
+    cursor = cnx.cursor()
+
+    try:
+        cursor.execute(sql)
+    except mysql.connector.Error as err:
+        print("Something went wrong: {}".format(err))
+
+def reset_mysql_database():
+    """
+    Function resets mysql database for new data loading.
+    :return: None
+    """
+    from gps_695 import database as d
+    import mysql
+    # from mysql.connector import connect, Error
+
+    file = open('gps_695/database_clear.sql', 'r')
+    sql = file.read()
+    file.close
+
+    cnx = d.connect_to_database()
+    cursor = cnx.cursor()
+
+    try:
+        cursor.execute(sql)
+    except mysql.connector.Error as err:
+        print("Something went wrong: {}".format(err))
+
+    d.create_mysql_database()
 
 def call_tweets(api_bearer, keyword, start_date, end_date, results):
     """

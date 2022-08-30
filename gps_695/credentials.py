@@ -42,7 +42,7 @@ def load_env_credentials():
         for line in f.readlines():
             try:
                 key, value = line.split('=')
-                os.environ[key] = value
+                os.environ[key] = value.strip()
             except ValueError:
                 # syntax error
                 pass
