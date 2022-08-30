@@ -4,8 +4,6 @@ def create_mysql_database(hostname):
     :return: None
     """
 
-
-
 def call_tweets(api_bearer, keyword, start_date, end_date, results):
     """
     Pulls tweets from research project API v2

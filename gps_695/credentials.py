@@ -47,14 +47,17 @@ def load_env_credentials():
                 # syntax error
                 pass
 
-def get_mysql_user_pass():
+def get_mysql_credentials():
     """
-    Pull username and password from current env variables for mysql database.
-    :return: Tuple of Username, Password
+    Pull database credentails from current env variables for mysql database.
+    :return: List of database credentials
     """
     import os
-    (k,v) = (os.getenv('mysql_username'), os.getenv('mysql_pass'))
-    return (k,v)
+    credentials = [os.getenv('mysql_username'),
+                   os.getenv('mysql_pass'),
+                   os.getenv('db_host'),
+                   os.getenv('database')]
+    return credentials
 
 def get_twitter_api_bearer():
     """
