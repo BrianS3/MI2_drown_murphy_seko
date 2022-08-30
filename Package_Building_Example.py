@@ -1,15 +1,14 @@
 import gps_695
 from gps_695 import database
-from gps_695 import package
+from gps_695 import credentials
 # import os
 
-# package_helpers.create_env_variables()
+# help(credentials.create_env_variables)
+# credentials.create_env_variables()
 
-help(package_helpers.create_env_variables)
+credentials.load_env_credentials()
+credential_list = credentials.get_mysql_credentials()
 
-package_helpers.load_env_credentials()
-mysql_username, mysql_pass = package_helpers.get_mysql_user_pass()
-
-print(mysql_username)
-print(mysql_pass)
+print(credential_list[0])
+print(credential_list[2])
 
