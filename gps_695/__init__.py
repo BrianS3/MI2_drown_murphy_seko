@@ -1,6 +1,6 @@
-print("gps_695 package load")
 import pip
 import json
+import mysql
 
 try:
     import dotenv
@@ -11,3 +11,8 @@ try:
     import requests
 except:
     pip.main(['install', 'requests'])
+
+try:
+    import mysql
+except:
+    pip.main(['install', 'mysql'])
