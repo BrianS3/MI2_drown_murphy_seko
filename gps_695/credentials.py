@@ -46,24 +46,3 @@ def load_env_credentials():
             except ValueError:
                 # syntax error
                 pass
-
-def get_mysql_credentials():
-    """
-    Pull database credentails from current env variables for mysql database.
-    :return: List of database credentials
-    """
-    import os
-    credentials = [os.getenv('mysql_username'),
-                   os.getenv('mysql_pass'),
-                   os.getenv('db_host'),
-                   os.getenv('database')]
-    return credentials
-
-def get_twitter_api_bearer():
-    """
-    Pull API bearer token from current env variables for Twitter API.
-    :return: string, twitter bearer token.
-    """
-    import os
-    api_b = os.getenv('twitter_bearer')
-    return api_b

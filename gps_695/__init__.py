@@ -1,7 +1,3 @@
-import pip
-import json
-import mysql
-
 try:
     import dotenv
 except:
