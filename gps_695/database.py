@@ -66,12 +66,8 @@ def call_tweets(keyword, start_date, end_date, results):
     import requests
     import os
 
-    search_keyword = keyword
-    search_start_date = start_date
-    search_end_date = end_date
-    search_results = results
     search_api_bearer = os.getenv('twitter_bearer')
-    url = f"https://api.twitter.com/2/tweets/search/all?query={search_keyword}&start_time={search_start_date}T00:00:00.000Z&end_time={search_end_date}T00:00:00.000Z&max_results={search_results}&tweet.fields=created_at,geo,text&expansions=attachments.poll_ids,attachments.media_keys,author_id,geo.place_id,in_reply_to_user_id,referenced_tweets.id,entities.mentions.username,referenced_tweets.id.author_id&place.fields=contained_within,country,country_code,full_name,geo,id,name&user.fields=created_at,description,entities,id,location,name,pinned_tweet_id,profile_image_url,protected,public_metrics,url,username,verified,withheld"
+    url = f"https://api.twitter.com/2/tweets/search/all?query={keyword}&start_time={start_date}T00:00:00.000Z&end_time={end_date}T00:00:00.000Z&max_results={results}&tweet.fields=created_at,geo,text&expansions=attachments.poll_ids,attachments.media_keys,author_id,geo.place_id,in_reply_to_user_id,referenced_tweets.id,entities.mentions.username,referenced_tweets.id.author_id&place.fields=contained_within,country,country_code,full_name,geo,id,name&user.fields=created_at,description,entities,id,location,name,pinned_tweet_id,profile_image_url,protected,public_metrics,url,username,verified,withheld"
     payload = {}
     headers = {
         'Authorization': f'Bearer {search_api_bearer}',
