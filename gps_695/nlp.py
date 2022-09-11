@@ -1,7 +1,7 @@
 
 def clean_tweets(df):
     '''
-    INPUT: Pandas DataFrame from database data
+    INPUT: Pandas DataFrame from database data.
     Removes tweets that are sent when a person posts a video or photo only;
     removes URLS, username mentions from tweet text;
     translates non-English Tweets;
