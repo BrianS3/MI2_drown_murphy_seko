@@ -33,4 +33,4 @@ d.create_mysql_database()
 d.reset_mysql_database()
 
 #make request to twitter api and return a json object
-json_object = d.call_tweets(keyword='', start_date='', end_date='', results=)
+json_object = d.call_tweets(keyword='hello', start_date='1900-01-01', end_date='1900-01-01', results=10)

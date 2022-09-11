@@ -12,6 +12,7 @@ setup(name='gps_695',
             'pip',
             'json',
             'dotenv',
-            'requests'
+            'requests',
+            'mysql'
       ],
       zip_safe=False)
