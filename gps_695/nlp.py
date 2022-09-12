@@ -64,7 +64,7 @@ def lemmatize(df):
     tokenizes;
     removes stopwords and lingering URLS;
     lemmatizes
-    RETURNS: df with lemmatized tweet column
+    RETURNS: original df with added LEMM column
     '''
 
     # tokenize
@@ -145,3 +145,29 @@ def analyze_tweets(df):
 
     return df[['TWEET_ID', 'OVERALL_EMO']]
 
+
+def get_associated_keywords(df, search_term, components=2, returned_items=2):
+    '''INPUT: df with TIDY_TWEET column
+    components: integer value to use with n_components in NMF algorithm
+    returned_items: integer value to specify how many keywords you want returned
+    OUTPUT: list of strings representing associated keywords
+    '''
+    from sklearn.decomposition import NMF
+    from sklearn.feature_extraction.text import TfidfVectorizer
+
+    vect = TfidfVectorizer(min_df=50, stop_words='english')
+
+    X = vect.fit_transform(df.TIDY_TWEET)
+    model = NMF(n_components=components, random_state=42)
+    model.fit(X)
+    nmf_features = model.transform(X)
+
+    components_df = pd.DataFrame(model.components_, columns=vect.get_feature_names_out())
+    for topic in range(components_df.shape[0]):
+        tmp = components_df.iloc[topic]
+        associated_keywords = list(tmp.nlargest().index)
+        for word in associated_keywords:
+            if word == search_term:
+                associated_keywords.remove(word)
+
+    return associated_keywords[:returned_items]
