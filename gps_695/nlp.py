@@ -64,7 +64,7 @@ def lemmatize(df):
     tokenizes;
     removes stopwords and lingering URLS;
     lemmatizes
-    RETURNS: df with lemmatized tweet column
+    RETURNS: original df with added LEMM column
     '''
 
     # tokenize
@@ -102,16 +102,13 @@ def lemmatize(df):
     return df
 
 
-
-
 def analyze_tweets(df):
     '''
     INPUT: Pandas DataFrame with TIDY_TWEET column
-    Get emotions: Happy, Angry, Surprise, Sad, Fear
-    Get sentiments: Positive, Negative, Neutral, Compound
-    OUTPUT: original df with added columns TWEET_EMO, OVERALL_EMO, TWEET_SENT_SCORES, TWEET_SENT
+    Get emotions: Happy, Angry, Surprise, Sad, Fear, *Neutral, *Mixed
+    *determined by top emotions(highest=0: neutral; highest>1: mixed
+    OUTPUT: df with columns TWEET_ID, OVERALL_EMO
     '''
-    from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
     import text2emotion as te
 
     # get emotion scores and predominant tweet emotion(s)
@@ -122,34 +119,55 @@ def analyze_tweets(df):
     df['TWEET_EMO'] = emos
 
     predominant_emotion = []
-    for item in df['TWEET_EMO']:
+    for item in test:
         sort_by_score_lambda = lambda subject_score_pair: subject_score_pair[1]
         sorted_value_key_pairs = sorted(item.items(), key=sort_by_score_lambda, reverse=True)
 
-        for item in sorted_value_key_pairs[:1]:
+        emos = []
+        if sorted_value_key_pairs[0][1] == 0:
+            emos.append('Neutral')
+        else:
+            emos.append(sorted_value_key_pairs[0][0])
+        for i, item in enumerate(sorted_value_key_pairs):
             a = sorted_value_key_pairs[0][1]
-            b = sorted_value_key_pairs[1][1]
-            if a == b:
-                predominant_emotion.append([sorted_value_key_pairs[0][0], sorted_value_key_pairs[1][0]])
-            else:
-                predominant_emotion.append(sorted_value_key_pairs[0][0])
+            if sorted_value_key_pairs[i][1] == a and i != 0 and a != 0:
+                emos.append(sorted_value_key_pairs[i][0])
+        predominant_emotion.append(emos)
+
+    for i, item in enumerate(predominant_emotion):
+        if len(item) > 1:
+            predominant_emotion[i] = ['Mixed']
+    predominant_emotion = [element for sublist in predominant_emotion for element in sublist]
 
     df['OVERALL_EMO'] = predominant_emotion
 
-    #     # get sentiment scores and predominant tweet sentiment
-    #     analyzer = SentimentIntensityAnalyzer()
-    #     scores = []
-    #     for item in df['TIDY_TWEET']:
-    #         vs = analyzer.polarity_scores(item)
-    #         scores.append(vs)
-    #     df['TWEET_SENT_SCORES'] = scores
 
-    #     predominant_sentiment = []
-    #     for i, item in enumerate(df['TWEET_SENT_SCORES']):
-    #         sort = sorted(item, key=item.get, reverse=True)
-    #         predominant_sentiment.append(sort[:1])
-    #     predominant_sentiment = [element for sublist in predominant_sentiment for element in sublist]
-    #     df['TWEET_SENT'] = predominant_sentiment
 
-    return df
+    return df[['TWEET_ID', 'OVERALL_EMO']]
 
+
+def get_associated_keywords(df, search_term, components=2, returned_items=2):
+    '''INPUT: df with TIDY_TWEET column
+    components: integer value to use with n_components in NMF algorithm
+    returned_items: integer value to specify how many keywords you want returned
+    OUTPUT: list of strings representing associated keywords
+    '''
+    from sklearn.decomposition import NMF
+    from sklearn.feature_extraction.text import TfidfVectorizer
+
+    vect = TfidfVectorizer(min_df=50, stop_words='english')
+
+    X = vect.fit_transform(df.TIDY_TWEET)
+    model = NMF(n_components=components, random_state=42)
+    model.fit(X)
+    nmf_features = model.transform(X)
+
+    components_df = pd.DataFrame(model.components_, columns=vect.get_feature_names_out())
+    for topic in range(components_df.shape[0]):
+        tmp = components_df.iloc[topic]
+        associated_keywords = list(tmp.nlargest().index)
+        for word in associated_keywords:
+            if word == search_term:
+                associated_keywords.remove(word)
+
+    return associated_keywords[:returned_items]
