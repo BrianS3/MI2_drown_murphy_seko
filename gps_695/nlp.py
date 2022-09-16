@@ -98,6 +98,10 @@ def lemmatize(df):
         lemms.append(l)
 
     df['LEMM'] = lemms
+    
+    for i, lemm in enumerate(df['LEMM']):
+        lemm2 = " ".join(lemm)
+        df.loc[i, 'LEMM'] = lemm2
 
     return df
 
@@ -157,7 +161,7 @@ def get_associated_keywords(df, search_term, components=2, returned_items=2):
 
     vect = TfidfVectorizer(min_df=50, stop_words='english')
 
-    X = vect.fit_transform(df.TIDY_TWEET)
+    X = vect.fit_transform(df.LEMM)
     model = NMF(n_components=components, random_state=42)
     model.fit(X)
     nmf_features = model.transform(X)
