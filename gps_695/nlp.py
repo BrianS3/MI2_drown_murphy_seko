@@ -99,6 +99,10 @@ def lemmatize(df):
 
     df['LEMM'] = lemms
 
+    for i, lemm in enumerate(df['LEMM']):
+        lemm2 = " ".join(lemm)
+        df.loc[i, 'LEMM'] = lemm2
+        
     return df
 
 
