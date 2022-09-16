@@ -119,7 +119,7 @@ def analyze_tweets(df):
     df['TWEET_EMO'] = emos
 
     predominant_emotion = []
-    for item in test:
+    for item in df['TWEET_EMO']:
         sort_by_score_lambda = lambda subject_score_pair: subject_score_pair[1]
         sorted_value_key_pairs = sorted(item.items(), key=sort_by_score_lambda, reverse=True)
 
