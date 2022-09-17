@@ -99,6 +99,10 @@ def lemmatize(df):
 
     df['LEMM'] = lemms
 
+    for i, lemm in enumerate(df['LEMM']):
+        lemm2 = " ".join(lemm)
+        df.loc[i, 'LEMM'] = lemm2
+        
     return df
 
 
@@ -119,7 +123,7 @@ def analyze_tweets(df):
     df['TWEET_EMO'] = emos
 
     predominant_emotion = []
-    for item in test:
+    for item in df['TWEET_EMO']:
         sort_by_score_lambda = lambda subject_score_pair: subject_score_pair[1]
         sorted_value_key_pairs = sorted(item.items(), key=sort_by_score_lambda, reverse=True)
 
@@ -146,22 +150,56 @@ def analyze_tweets(df):
     return df[['TWEET_ID', 'OVERALL_EMO']]
 
 
-def get_associated_keywords(df, search_term, components=2, returned_items=2):
-    '''INPUT: df with TIDY_TWEET column
-    components: integer value to use with n_components in NMF algorithm
-    returned_items: integer value to specify how many keywords you want returned
+def get_associated_keywords(df, search_term, returned_items=2):
+    '''INPUT: df with LEMM column
+    search_term: 
+    returned_items: integer value to specify how many keywords max you want returned
     OUTPUT: list of strings representing associated keywords
     '''
     from sklearn.decomposition import NMF
     from sklearn.feature_extraction.text import TfidfVectorizer
+    
+   
+    # Find best number of components to use
+    from gensim import corpora
+    from gensim.models.ldamodel import LdaModel
+    from gensim.models.coherencemodel import CoherenceModel
+    from operator import itemgetter
 
-    vect = TfidfVectorizer(min_df=50, stop_words='english')
+    # Convert to bag of words
+    texts = df['LEMM']
+    dictionary = corpora.Dictionary(texts)
+    topic_nums = list(np.arange(1, 6))
+    
+    corpus = [dictionary.doc2bow(text) for text in texts]
 
-    X = vect.fit_transform(df.TIDY_TWEET)
-    model = NMF(n_components=components, random_state=42)
+    # Get coherence scores
+    coherence_scores = []
+    for num in topic_nums:
+        model = LdaModel(corpus, num, dictionary)
+        cm = CoherenceModel(model=model, texts=texts, corpus=corpus, coherence='c_v')
+    
+    coherence_scores.append(round(cm.get_coherence(), 5))
+    
+
+    # Get the number of topics with the highest coherence score
+    scores = list(zip(topic_nums, coherence_scores))
+    best_num_topics = sorted(scores, key=itemgetter(1), reverse=True)[0][0]
+    
+    # Perform NMF to find topics
+    vect = TfidfVectorizer(min_df=int(np.round(0.1*len(df))), stop_words='english') # must appear in 10% of tweets
+    df2=df.copy()
+    for i, lemm in enumerate(df2['LEMM']):
+        lemm2 = " ".join(lemm)
+        df2.loc[i, 'LEMM'] = lemm2
+
+    X = vect.fit_transform(df2.LEMM)
+    model = NMF(n_components=best_num_topics, random_state=42)
     model.fit(X)
     nmf_features = model.transform(X)
-
+    
+   
+    
     components_df = pd.DataFrame(model.components_, columns=vect.get_feature_names_out())
     for topic in range(components_df.shape[0]):
         tmp = components_df.iloc[topic]
@@ -169,5 +207,5 @@ def get_associated_keywords(df, search_term, components=2, returned_items=2):
         for word in associated_keywords:
             if word == search_term:
                 associated_keywords.remove(word)
-
+    
     return associated_keywords[:returned_items]
