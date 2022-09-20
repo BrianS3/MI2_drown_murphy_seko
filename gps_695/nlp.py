@@ -10,20 +10,18 @@ def clean_tweets(df):
     '''
     import re
     from googletrans import Translator
-    from string import punctuation
 
     data = df
     data.dropna(inplace=True)
 
-    # Remove photos and videos/usernames/digits/hashtags/URLs
+    # Remove photos and videos/usernames/digits/URLs
     # make lowercase and strip excess spaces
     data = data[~data.TWEET_TEXT.str.contains("Just posted a")]  # posts that are only photos/videos
     data['TIDY_TWEET'] = [re.sub("@[\w]*", " ", item) for item in data['TWEET_TEXT']]  # usernames
     data['TIDY_TWEET'] = [re.sub("[0-9]", " ", item) for item in data['TIDY_TWEET']]  # digits
-    #         data['TIDY_TWEET'] = [re.sub(r"\B#\w*[a-zA-Z]+\w*", "", item) for item in data['TIDY_TWEET']] # hashtags
     data['TIDY_TWEET'] = [re.sub(r"https?:\/\/.*[\r\n]*", "", item) for item in data['TIDY_TWEET']]  # URLs
     data['TIDY_TWEET'] = [re.sub(r"[^\w'\s]+", " ", item) for item in data['TIDY_TWEET']]  # punctuation
-    data['TIDY_TWEET'] = [item.lower().strip() for item in data['TIDY_TWEET']]
+    data['TIDY_TWEET'] = [item.lower().strip() for item in data['TIDY_TWEET']] # extra spaces
 
     # Remove empty strings
     data['TIDY_TWEET'].replace('', np.nan, inplace=True)
@@ -34,8 +32,6 @@ def clean_tweets(df):
     for i, item in enumerate(data['TIDY_TWEET']):
         lang = detect(item)
         data.loc[i, 'TWEET_LANG'] = lang
-
-        #         data = data[data.TWEET_LANG == 'en'] # removing non-English tweets
 
         # translating non-English tweets
         if data['TWEET_LANG'][i] != 'en':
@@ -141,22 +137,23 @@ def analyze_tweets(df):
 
     df['OVERALL_EMO'] = predominant_emotion
 
-
-
     return df[['TWEET_ID', 'OVERALL_EMO']]
 
 
+##### UNSUPERVISED LEARNING MODEL #####
+
 def get_associated_keywords(df, search_term, returned_items=2):
     '''INPUT: df with LEMM column
-    search_term: 
+    search_term: the search term associated with the news event/tweets
     returned_items: integer value to specify how many keywords max you want returned
-    OUTPUT: list of strings representing associated keywords
+    OUTPUT: list of strings representing keywords associated with search_term
     '''
     from sklearn.decomposition import NMF
     from sklearn.feature_extraction.text import TfidfVectorizer
     
    
     # Find best number of components to use
+
     from gensim import corpora
     from gensim.models.ldamodel import LdaModel
     from gensim.models.coherencemodel import CoherenceModel
@@ -165,43 +162,50 @@ def get_associated_keywords(df, search_term, returned_items=2):
     # Convert to bag of words
     texts = df['LEMM']
     dictionary = corpora.Dictionary(texts)
-    topic_nums = list(np.arange(1, 6))
+    topic_nums = list(np.arange(1, 6)) # tested up to 100 topics, with same results as 5 topics (but significantly slower)
     
     corpus = [dictionary.doc2bow(text) for text in texts]
 
-    # Get coherence scores
+    # Get coherence scores with LDA
     coherence_scores = []
     for num in topic_nums:
-        model = LdaModel(corpus, num, dictionary)
+        model = LdaModel(corpus, num, dictionary)#, random_state=42)
         cm = CoherenceModel(model=model, texts=texts, corpus=corpus, coherence='c_v')
     
     coherence_scores.append(round(cm.get_coherence(), 5))
     
 
-    # Get the number of topics with the highest coherence score
+    # Get number of components with the highest coherence score
     scores = list(zip(topic_nums, coherence_scores))
     best_num_topics = sorted(scores, key=itemgetter(1), reverse=True)[0][0]
-    
-    # Perform NMF to find topics
-    vect = TfidfVectorizer(min_df=int(np.round(0.1*len(df))), stop_words='english') # must appear in 10% of tweets
+   
+    # Turn list of lemmatized words into a string for analysis
     df2=df.copy()
     for i, lemm in enumerate(df2['LEMM']):
         lemm2 = " ".join(lemm)
         df2.loc[i, 'LEMM'] = lemm2
 
-    X = vect.fit_transform(df2.LEMM)
-    model = NMF(n_components=best_num_topics, random_state=42)
-    model.fit(X)
-    nmf_features = model.transform(X)
+#     df2 = df2.sample(500) # testing to see if 500 tweets is enough--results are the same top 3 as 1000
+
+    # Perform NMF unsupervised learning to find topics
+    vect = TfidfVectorizer(min_df=int(np.round(0.1*len(df))), stop_words='english', ngram_range=(2,2))
     
-   
-    
-    components_df = pd.DataFrame(model.components_, columns=vect.get_feature_names_out())
-    for topic in range(components_df.shape[0]):
-        tmp = components_df.iloc[topic]
-        associated_keywords = list(tmp.nlargest().index)
-        for word in associated_keywords:
-            if word == search_term:
-                associated_keywords.remove(word)
-    
-    return associated_keywords[:returned_items]
+    # term must appear in 10% of tweets, looking for bigrams
+    try:
+        X = vect.fit_transform(df2.LEMM)
+        model = NMF(n_components=best_num_topics)#, random_state=42)
+        # max_iter tested @ default(200), 500, 1000, 10k: all resulted in the same output
+        model.fit(X)
+        nmf_features = model.transform(X)
+
+        components_df = pd.DataFrame(model.components_, columns=vect.get_feature_names_out())
+        for topic in range(components_df.shape[0]):
+            tmp = components_df.iloc[topic]
+            associated_keywords = list(tmp.nlargest().index)
+            for word in associated_keywords:
+                if word == search_term:
+                    associated_keywords.remove(word)
+        return associated_keywords[:returned_items]
+
+    except ValueError:
+        return "Could not find associated topics."
