@@ -13,6 +13,8 @@ setup(name='gps_695',
             'json',
             'dotenv',
             'requests',
-            'mysql'
+            'mysql',
+            'pytrends',
+            'plotly'
       ],
       zip_safe=False)

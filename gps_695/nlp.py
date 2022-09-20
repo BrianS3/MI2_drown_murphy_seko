@@ -98,7 +98,7 @@ def lemmatize(df):
         lemms.append(l)
 
     df['LEMM'] = lemms
-
+        
     return df
 
 
