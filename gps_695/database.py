@@ -31,6 +31,8 @@ def create_mysql_database():
     except mysql.connector.Error as err:
         print("Something went wrong: {}".format(err))
 
+    cursor.close()
+
 def reset_mysql_database():
     """
     Function resets mysql database for new data loading.
@@ -53,6 +55,7 @@ def reset_mysql_database():
         print("Something went wrong: {}".format(err))
 
     d.create_mysql_database()
+    cursor.close()
 
 def call_tweets(keyword, start_date, end_date, results):
     """
@@ -78,7 +81,7 @@ def call_tweets(keyword, start_date, end_date, results):
 
 
 
-def load_tweets(keyword, start_date, end_date, results = 500)
+def load_tweets(keyword, start_date, end_date, results = 500):
     """Pulls tweets from research project API v2
     :param keyword: keyword of tweet for API query
     :param start_date: start date of query, YYYY-MM-DD format, string
