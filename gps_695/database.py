@@ -57,6 +57,24 @@ def reset_mysql_database():
     d.create_mysql_database()
     cursor.close()
 
+def check_trend(keyword):
+    """
+    Uses google trend to build a simple line chart of the current trend by keyword/phrase
+    :param keyword: keyword or phrase
+    :return: creates a plotly image which generates from .show()
+    """
+    from pytrends.request import TrendReq
+    pytrends = TrendReq(hl='en-US', tz=360)
+    kw_list = [f"{keyword}"]
+    pytrends.build_payload(kw_list, cat=0, timeframe='today 12-m')
+    data = pytrends.interest_over_time()
+    data = data.reset_index()
+
+    import plotly.express as px
+    fig = px.line(data, x="date", y=[f'Phrase: {keyword}'], title='Keyword Web Search Interest Over Time')
+    fig.show()
+
+
 def call_tweets(keyword, start_date, end_date, results):
     """
     Pulls tweets from research project API v2
@@ -173,3 +191,4 @@ def load_tweets(keyword, start_date, end_date, results = 500):
     # print("skipped: ", count_skipped)
 
     #failed.to_excel(pathway)
+
