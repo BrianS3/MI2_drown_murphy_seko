@@ -142,7 +142,7 @@ def analyze_tweets(df):
 
 ##### UNSUPERVISED LEARNING MODEL #####
 
-def get_associated_keywords(df, search_term, returned_items=2):
+def get_associated_keywords(df, search_term, returned_items=3):
     '''INPUT: df with LEMM column
     search_term: the search term associated with the news event/tweets
     returned_items: integer value to specify how many keywords max you want returned
@@ -209,3 +209,55 @@ def get_associated_keywords(df, search_term, returned_items=2):
 
     except ValueError:
         return "Could not find associated topics."
+
+    
+    
+    
+def evaluate_keywords(search_term, keyword_list):
+    '''
+    INPUT: original search_term, list of associated search terms found by get_associated_keywords()
+    Uses distance metric to determine the closest 2 terms to original search_term based on Google Trends
+    OUTPUT: list of 2 closest terms (strings)
+    '''
+    
+    if len(keyword_list) < 3:
+        return keyword_list
+    
+    kw = keyword_list
+    kw.insert(0,search_term)
+    
+    term_dict = {'AB':kw[1], 'AC':kw[2], 'AD':kw[3]}
+    
+    def check_trend(kw_list):
+        """
+        Uses google trend to build a simple line chart of the current trend by keyword/phrase
+        :param keyword: keyword or phrase, or many keywords/phrases separated by commas. Must be strings.
+        :return: dataframe with google trend data per term
+        """
+        from pytrends.request import TrendReq
+        pytrends = TrendReq(hl='en-US', tz=360)
+        pytrends.build_payload(kw_list, cat=0, timeframe='today 12-m')
+        data = pytrends.interest_over_time()
+        data = data.reset_index()
+
+        return data
+
+    trend = check_trend(kw)
+
+    a = trend[kw[0]]
+    b = trend[kw[1]]
+    c = trend[kw[2]]
+    d = trend[kw[3]]
+    
+    from sklearn.metrics import mean_squared_error
+    trend['AB'] = mean_squared_error(a,b)
+    trend['AC'] = mean_squared_error(a,c)
+    trend['AD'] = mean_squared_error(a,d)
+    
+    sum_dict = {'AB':trend['AB'].sum(), 'AC':trend['AC'].sum(), 'AD':trend['AD'].sum()}
+    sort_sum_dict = sorted(sum_dict.items(), key=lambda x:x[1])
+    
+    top_scoring = [sort_sum_dict[:2][0][0], sort_sum_dict[:2][1][0]]
+    top_terms = [term_dict[item] for item in top_scoring]
+    
+    return top_terms
