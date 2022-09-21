@@ -203,7 +203,7 @@ def get_associated_keywords(df, search_term, returned_items=3):
             tmp = components_df.iloc[topic]
             associated_keywords = list(tmp.nlargest().index)
             for word in associated_keywords:
-                if word == search_term:
+                if search_term in word:
                     associated_keywords.remove(word)
         return associated_keywords[:returned_items]
 
