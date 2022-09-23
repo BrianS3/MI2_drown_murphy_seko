@@ -105,6 +105,7 @@ def analyze_tweets(df):
     *determined by top emotions(highest=0: neutral; highest>1: mixed
     OUTPUT: df with columns TWEET_ID, OVERALL_EMO
     '''
+#     from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
     import text2emotion as te
 
     # get emotion scores and predominant tweet emotion(s)
@@ -114,30 +115,40 @@ def analyze_tweets(df):
         emos.append(emo)
     df['TWEET_EMO'] = emos
 
+
     predominant_emotion = []
+    pred_emo_score = [] ##
     for item in df['TWEET_EMO']:
-        sort_by_score_lambda = lambda subject_score_pair: subject_score_pair[1]
+        sort_by_score_lambda = lambda score: score[1]
         sorted_value_key_pairs = sorted(item.items(), key=sort_by_score_lambda, reverse=True)
 
         emos = []
+        emo_scores = [] ##
         if sorted_value_key_pairs[0][1] == 0:
             emos.append('Neutral')
+            emo_scores.append(0) ##
         else:
             emos.append(sorted_value_key_pairs[0][0])
+            emo_scores.append(sorted_value_key_pairs[0][1]) ##
         for i, item in enumerate(sorted_value_key_pairs):
             a = sorted_value_key_pairs[0][1]
-            if sorted_value_key_pairs[i][1] == a and i != 0 and a != 0:
+            if sorted_value_key_pairs[i][1]==a and i!=0 and a!=0:
                 emos.append(sorted_value_key_pairs[i][0])
+
+
         predominant_emotion.append(emos)
-
+        pred_emo_score.append(emo_scores) ##
+        
     for i, item in enumerate(predominant_emotion):
-        if len(item) > 1:
+        if len(item)>1:
             predominant_emotion[i] = ['Mixed']
+
     predominant_emotion = [element for sublist in predominant_emotion for element in sublist]
-
+    pred_emo_score = [element for sublist in pred_emo_score for element in sublist] ##
     df['OVERALL_EMO'] = predominant_emotion
+    df['OVERALL_EMO_SCORE'] = pred_emo_score
 
-    return df[['TWEET_ID', 'OVERALL_EMO']]
+    return df[['TWEET_ID', 'OVERALL_EMO', 'OVERALL_EMO_SCORE']]
 
 
 ##### UNSUPERVISED LEARNING MODEL #####
