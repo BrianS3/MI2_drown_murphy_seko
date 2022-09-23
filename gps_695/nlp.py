@@ -10,6 +10,7 @@ def clean_tweets(df):
     '''
     import re
     from googletrans import Translator
+    import numpy as np
 
     data = df
     data.dropna(inplace=True)
@@ -17,11 +18,12 @@ def clean_tweets(df):
     # Remove photos and videos/usernames/digits/URLs
     # make lowercase and strip excess spaces
     data = data[~data.TWEET_TEXT.str.contains("Just posted a")]  # posts that are only photos/videos
-    data['TIDY_TWEET'] = [re.sub("@[\w]*", " ", item) for item in data['TWEET_TEXT']]  # usernames
-    data['TIDY_TWEET'] = [re.sub("[0-9]", " ", item) for item in data['TIDY_TWEET']]  # digits
+    data['TIDY_TWEET'] = [re.sub("@[\w]*", "", item) for item in data['TWEET_TEXT']]  # usernames
+    data['TIDY_TWEET'] = [re.sub("[0-9]", "", item) for item in data['TIDY_TWEET']]  # digits
     data['TIDY_TWEET'] = [re.sub(r"https?:\/\/.*[\r\n]*", "", item) for item in data['TIDY_TWEET']]  # URLs
-    data['TIDY_TWEET'] = [re.sub(r"[^\w'\s]+", " ", item) for item in data['TIDY_TWEET']]  # punctuation
-    data['TIDY_TWEET'] = [item.lower().strip() for item in data['TIDY_TWEET']] # extra spaces
+    data['TIDY_TWEET'] = [re.sub(r"[^\w'\s]+", "", item) for item in data['TIDY_TWEET']]  # punctuation
+    data['TIDY_TWEET'] = [re.sub(r"RT ", "", item) for item in data['TIDY_TWEET']]  # if initial tweet by user is labeled as a retweet
+    data['TIDY_TWEET'] = data['TIDY_TWEET'].str.lower().str.strip() # extra spaces
 
     # Remove empty strings
     data['TIDY_TWEET'].replace('', np.nan, inplace=True)
@@ -30,7 +32,7 @@ def clean_tweets(df):
     # Detect language and translate
     translator = Translator()
     for i, item in enumerate(data['TIDY_TWEET']):
-        lang = detect(item)
+        lang = translator.detect(item)
         data.loc[i, 'TWEET_LANG'] = lang
 
         # translating non-English tweets

@@ -15,6 +15,8 @@ setup(name='gps_695',
             'requests',
             'mysql',
             'pytrends',
-            'plotly'
+            'plotly',
+            'warnings',
+            'pip install googletrans==3.1.0a0'
       ],
       zip_safe=False)
