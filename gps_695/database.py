@@ -122,8 +122,16 @@ def load_tweets(keyword, start_date, end_date, results = 500):
     df_data = pd.json_normalize(json_object['data'], max_level=5)
     df_text = df_data[['id', 'text']]
     df_text.rename(columns={'id': 'TWEET_ID', 'text': 'TWEET_TEXT'}, inplace=True)
-
+    print("Cleaning tweets..")
     df_text = n.clean_tweets(df_text)
+    print("Tweets cleaned")
+    print("Sentiment analysis starting....")
+    n.analyze_tweets(df_text)
+    print("Sentiment analysis complete")
+    print("Beep Boop Beep Boop Boop...Processing")
+    n.lemmatize(df_text)
+    # df_text = df_text[['TWEET_ID', 'TWEET_TEXT', 'TIDY_TWEET', 'LEMM', 'OVERALL_EMO', 'OVERALL_EMO_SCORE']]
+    df_text = df_text[['TWEET_ID', 'TIDY_TWEET', 'LEMM', 'OVERALL_EMO', 'OVERALL_EMO_SCORE']]
     column_list = list(df_text.columns)
 
     cnx = d.connect_to_database()
@@ -134,21 +142,25 @@ def load_tweets(keyword, start_date, end_date, results = 500):
         try:
             try:
                 query = (f"""
-                INSERT INTO TWEET_TEXT (TWEET_ID, TWEET_TEXT, LEMM)
+                INSERT INTO TWEET_TEXT (TWEET_ID, TIDY_TWEET, LEMM, OVERALL_EMO, OVERALL_EMO_SCORE)
                 VALUES (
                 "{row[column_list[0]]}"
                 ,"{row[column_list[1]]}"
                 ,"{row[column_list[2]]}"
+                ,"{row[column_list[3]]}"
+                ,"{row[column_list[4]]}"
                 );
                 """)
                 cursor.execute(query)
             except:
                 query = (f"""
-                INSERT INTO TWEET_TEXT (TWEET_ID, TWEET_TEXT, LEMM)
+                INSERT INTO TWEET_TEXT (TWEET_ID, TIDY_TWEET, LEMM, OVERALL_EMO, OVERALL_EMO_SCORE)
                 VALUES (
                 '{row[column_list[0]]}'
                 ,'{row[column_list[1]]}'
                 ,'{row[column_list[2]]}'
+                ,'{row[column_list[3]]}'
+                ,'{row[column_list[4]]}'
                 );
                 """)
                 cursor.execute(query)
@@ -159,11 +171,11 @@ def load_tweets(keyword, start_date, end_date, results = 500):
 
     #loading users
     df_author = pd.json_normalize(json_object['includes']['users'], max_level=2)
-    df_author = df_author[['id', 'created_at', 'location', 'description', 'public_metrics.followers_count',
+    df_author = df_author[['id', 'created_at', 'location', 'public_metrics.followers_count',
                            'public_metrics.following_count', 'public_metrics.listed_count',
                            'public_metrics.tweet_count', 'verified']]
     df_author.rename(
-        columns={'id': 'AUTHOR_ID', 'created_at': 'CREATED_AT', 'location': 'LOCATION', 'description': 'DESCRIPTION',
+        columns={'id': 'AUTHOR_ID', 'created_at': 'CREATED_AT', 'location': 'LOCATION',
                  'public_metrics.followers_count': 'FOLLOWERS_COUNT', \
                  'public_metrics.following_count': 'FOLLOWING_COUNT', 'public_metrics.listed_count': 'LISTED_COUNT',
                  'public_metrics.tweet_count': 'TWEET_COUNT', 'verified': 'VERIFIED'}, inplace=True)
@@ -186,7 +198,6 @@ def load_tweets(keyword, start_date, end_date, results = 500):
                             ,'{row[column_list[5]]}'
                             ,'{row[column_list[6]]}'
                             ,'{row[column_list[7]]}'
-                            ,'{row[column_list[8]]}'
                             );
                             """)
                 cursor.execute(query)
@@ -202,7 +213,6 @@ def load_tweets(keyword, start_date, end_date, results = 500):
                             ,"{row[column_list[5]]}"
                             ,"{row[column_list[6]]}"
                             ,"{row[column_list[7]]}"
-                            ,"{row[column_list[8]]}"
                             );
                             """)
                 cursor.execute(query)
@@ -235,4 +245,51 @@ def load_tweets(keyword, start_date, end_date, results = 500):
     cnx.commit()
     print("Data table 'tweet_data' loaded")
 
+
+
+    cnx = d.connect_to_database()
+    cursor = cnx.cursor()
+
+    query = "SELECT STATE, STATE_ABBR, STATE_ID FROM US_STATES"
+    results = pd.read_sql_query(query, cnx)
+
+    query_users = "SELECT * FROM USERS"
+    users = pd.read_sql(query_users, cnx)
+
+    state_name_dict = dict(zip(results['STATE'], results['STATE_ID']))
+    state_abbr_dict = dict(zip(results['STATE_ABBR'], results['STATE_ID']))
+    for key, value in state_abbr_dict.items():
+        state_name_dict[key] = value
+
+    users[["LOCATION_CLEAN"]] = users[["LOCATION"]].replace(',\ USA$', '', regex=True)
+    users[["LOCATION_CLEAN"]] = users[["LOCATION_CLEAN"]].replace('[.]', '', regex=True)
+    users[["LOCATION_CLEAN"]] = users[["LOCATION_CLEAN"]].replace('.*,\ (?=[A-Z]{2}$)', '', regex=True)
+    users[["LOCATION_CLEAN"]] = users[["LOCATION_CLEAN"]].replace('.*,\ (?=[A-Z]{2}$)', '', regex=True)
+    users[["LOCATION_CLEAN"]] = users[["LOCATION_CLEAN"]].replace('.*\ (?=[A-Z]{2}$)', '', regex=True)
+    users[["LOCATION_CLEAN"]] = users[["LOCATION_CLEAN"]].replace('.*,\ ', '', regex=True)
+    users[["LOCATION_CLEAN"]] = users[["LOCATION_CLEAN"]].replace('.*,(?=[A-Z]{2}$)', '', regex=True)
+    users['LOCATION_CLEAN'] = users['LOCATION_CLEAN'].str.upper()
+    users['STATE_ID'] = users['LOCATION_CLEAN'].apply(lambda x: [v for k, v in state_name_dict.items() if x == k])
+    users['STATE_ID'] = users['STATE_ID'].astype(str)
+    users['STATE_ID'] = users['STATE_ID'].replace('[[]', '', regex=True)
+    users['STATE_ID'] = users['STATE_ID'].replace('[]]', '', regex=True)
+    users = users[users['STATE_ID'].str.contains('\d+')]
+    users = users[['AUTHOR_ID', 'STATE_ID']]
+    column_list = list(users.columns)
+
+    for ind, row in users.iterrows():
+        try:
+            query = (f"""
+                        INSERT INTO AUTHOR_LOCATION (AUTHOR_ID, STATE_ID)
+                        VALUES (
+                        "{row[column_list[0]]}"
+                        ,"{row[column_list[1]]}"
+                        );
+                        """)
+            cursor.execute(query)
+        except:
+            continue
+    cnx.commit()
+    print("Data table 'author_location' loaded")
     cursor.close()
+    print("Load process complete")

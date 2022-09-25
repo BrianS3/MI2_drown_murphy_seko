@@ -17,6 +17,13 @@ setup(name='gps_695',
             'pytrends',
             'plotly',
             'warnings',
-            'pip install googletrans==3.1.0a0'
+            'googletrans==3.1.0a0',
+            'gensim',
+            'operator',
+            'text2emotion',
+            'emoji==1.6.3',
+            'pandas',
+            'numpy',
+            'tqdm'
       ],
       zip_safe=False)
