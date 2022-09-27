@@ -78,7 +78,6 @@ def lemmatize(df):
 
     # remove stopwords
     from nltk.corpus import stopwords
-    nltk.download('stopwords')
     
     stop_words = set(stopwords.words('english'))
     new_tokens = []
