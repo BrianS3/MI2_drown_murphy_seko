@@ -41,7 +41,7 @@ def reset_mysql_database():
     """
     from gps_695 import database as d
     import mysql
-    # from mysql.connector import connect, Error
+    #from mysql.connector import connect, Error
 
     file = open('gps_695/database_clear.sql', 'r')
     sql = file.read()
@@ -101,8 +101,6 @@ def call_tweets(keyword, start_date, end_date, results):
     print("Successful tweet extraction")
     return response
 
-
-
 def load_tweets(keyword, start_date, end_date, results = 500):
     """Pulls tweets from research project API v2
     :param keyword: keyword of tweet for API query
@@ -114,14 +112,16 @@ def load_tweets(keyword, start_date, end_date, results = 500):
     from gps_695 import database as d
     from gps_695 import nlp as n
     import warnings
+    import re
     warnings.filterwarnings("ignore")
 
     json_object = d.call_tweets(keyword, start_date, end_date, results)
 
     # Load tweet text
     df_data = pd.json_normalize(json_object['data'], max_level=5)
-    df_text = df_data[['id', 'text']]
-    df_text.rename(columns={'id': 'TWEET_ID', 'text': 'TWEET_TEXT'}, inplace=True)
+    df_text = df_data[['id', 'text', 'created_at', 'author_id']]
+    df_text.rename(columns={'id': 'TWEET_ID', 'text': 'TWEET_TEXT', 'created_at': 'CREATED', 'author_id': 'AUTHOR_ID'},
+                   inplace=True)
     print("Cleaning tweets..")
     df_text = n.clean_tweets(df_text)
     print("Tweets cleaned")
@@ -130,8 +130,10 @@ def load_tweets(keyword, start_date, end_date, results = 500):
     print("Sentiment analysis complete")
     print("Beep Boop Beep Boop Boop...Processing")
     n.lemmatize(df_text)
-    # df_text = df_text[['TWEET_ID', 'TWEET_TEXT', 'TIDY_TWEET', 'LEMM', 'OVERALL_EMO', 'OVERALL_EMO_SCORE']]
-    df_text = df_text[['TWEET_ID', 'TIDY_TWEET', 'LEMM', 'OVERALL_EMO', 'OVERALL_EMO_SCORE']]
+    df_text = df_text[['TWEET_ID', 'AUTHOR_ID', 'CREATED', 'TIDY_TWEET', 'LEMM', 'OVERALL_EMO', 'OVERALL_EMO_SCORE']]
+    df_text['CREATED'] = df_text['CREATED'].astype('datetime64[ns]').dt.date
+    df_text['OVERALL_EMO_SCORE'] = round(df_text['OVERALL_EMO_SCORE'], 2)
+    df_text['TIDY_TWEET'] = [re.sub("[']", "", item) for item in df_text['TIDY_TWEET']]
     column_list = list(df_text.columns)
 
     cnx = d.connect_to_database()
@@ -142,34 +144,40 @@ def load_tweets(keyword, start_date, end_date, results = 500):
         try:
             try:
                 query = (f"""
-                INSERT INTO TWEET_TEXT (TWEET_ID, TIDY_TWEET, LEMM, OVERALL_EMO, OVERALL_EMO_SCORE)
-                VALUES (
-                "{row[column_list[0]]}"
-                ,"{row[column_list[1]]}"
-                ,"{row[column_list[2]]}"
-                ,"{row[column_list[3]]}"
-                ,"{row[column_list[4]]}"
-                );
-                """)
+                 INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM, OVERALL_EMO, OVERALL_EMO_SCORE)
+                 VALUES (
+                 "{row[column_list[0]]}"
+                 ,"{row[column_list[1]]}"
+                 ,"{row[column_list[2]]}"
+                 ,"{keyword}"
+                 ,"{row[column_list[3]]}"
+                 ,"{row[column_list[4]]}"
+                 ,"{row[column_list[5]]}"
+                 ,"{row[column_list[6]]}"
+                 );
+                 """)
                 cursor.execute(query)
             except:
                 query = (f"""
-                INSERT INTO TWEET_TEXT (TWEET_ID, TIDY_TWEET, LEMM, OVERALL_EMO, OVERALL_EMO_SCORE)
-                VALUES (
-                '{row[column_list[0]]}'
-                ,'{row[column_list[1]]}'
-                ,'{row[column_list[2]]}'
-                ,'{row[column_list[3]]}'
-                ,'{row[column_list[4]]}'
-                );
-                """)
+                 INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM, OVERALL_EMO, OVERALL_EMO_SCORE)
+                 VALUES (
+                 '{row[column_list[0]]}'
+                 ,'{row[column_list[1]]}'
+                 ,'{row[column_list[2]]}'
+                 ,'{keyword}
+                 ,'{row[column_list[3]]}'
+                 ,'{row[column_list[4]]}'
+                 ,'{row[column_list[5]]}'
+                 ,'{row[column_list[6]]}'
+                 );
+                 """)
                 cursor.execute(query)
         except:
             continue
     cnx.commit()
     print("Data table 'tweet_text' loaded")
 
-    #loading users
+    # loading users
     df_author = pd.json_normalize(json_object['includes']['users'], max_level=2)
     df_author = df_author[['id', 'created_at', 'location', 'public_metrics.followers_count',
                            'public_metrics.following_count', 'public_metrics.listed_count',
@@ -182,71 +190,51 @@ def load_tweets(keyword, start_date, end_date, results = 500):
 
     column_list = list(df_author.columns)
 
+    query_users = "SELECT DISTINCT AUTHOR_ID FROM TWEET_TEXT"
+    users = pd.read_sql(query_users, cnx)
+    user_list = list(users['AUTHOR_ID'])
+
+    df_author = df_author[df_author['AUTHOR_ID'].isin(user_list)]
     df_author['CREATED_AT'] = df_author['CREATED_AT'].astype('datetime64[ns]').dt.date
 
     for ind, row in df_author.iterrows():
         try:
             try:
                 query = (f"""
-                            INSERT INTO USERS
-                            VALUES (
-                            '{row[column_list[0]]}'
-                            ,'{row[column_list[1]]}'
-                            ,'{row[column_list[2]]}'
-                            ,'{row[column_list[3]]}'
-                            ,'{row[column_list[4]]}'
-                            ,'{row[column_list[5]]}'
-                            ,'{row[column_list[6]]}'
-                            ,'{row[column_list[7]]}'
-                            );
-                            """)
+                             INSERT INTO USERS
+                             VALUES (
+                             '{row[column_list[0]]}'
+                             ,'{row[column_list[1]]}'
+                             ,'{row[column_list[2]]}'
+                             ,'{row[column_list[3]]}'
+                             ,'{row[column_list[4]]}'
+                             ,'{row[column_list[5]]}'
+                             ,'{row[column_list[6]]}'
+                             ,'{row[column_list[7]]}'
+                             );
+                             """)
                 cursor.execute(query)
             except:
                 query = (f"""
-                            INSERT INTO USERS
-                            VALUES (
-                            "{row[column_list[0]]}"
-                            ,"{row[column_list[1]]}"
-                            ,"{row[column_list[2]]}"
-                            ,"{row[column_list[3]]}"
-                            ,"{row[column_list[4]]}"
-                            ,"{row[column_list[5]]}"
-                            ,"{row[column_list[6]]}"
-                            ,"{row[column_list[7]]}"
-                            );
-                            """)
+                             INSERT INTO USERS
+                             VALUES (
+                             "{row[column_list[0]]}"
+                             ,"{row[column_list[1]]}"
+                             ,"{row[column_list[2]]}"
+                             ,"{row[column_list[3]]}"
+                             ,"{row[column_list[4]]}"
+                             ,"{row[column_list[5]]}"
+                             ,"{row[column_list[6]]}"
+                             ,"{row[column_list[7]]}"
+                             );
+                             """)
                 cursor.execute(query)
         except:
             continue
     cnx.commit()
     print("Data table 'users' loaded")
 
-    #load tweet_data must come after users
-    df_meta = pd.json_normalize(json_object['data'], max_level=3)
-    df_meta = df_meta[['author_id', 'id', 'created_at']]
-    df_meta['created_at'] = df_meta['created_at'].astype('datetime64[ns]').dt.date
-    df_meta.rename(columns={'author_id': 'AUTHOR_ID', 'created_at': 'CREATED_AT', 'id': 'TWEET_ID'}, inplace=True)
-    column_list = list(df_meta.columns)
-
-    for ind, row in df_meta.iterrows():
-        try:
-            query = (f"""
-                        INSERT INTO TWEET_DATA (AUTHOR_ID, TWEET_ID, CREATED_AT, SEARCH_TERM)
-                        VALUES (
-                        "{row[column_list[0]]}"
-                        ,"{row[column_list[1]]}"
-                        ,"{row[column_list[2]]}"
-                        ,"{keyword}"
-                        );
-                        """)
-            cursor.execute(query)
-        except:
-            continue
-    cnx.commit()
-    print("Data table 'tweet_data' loaded")
-
-
-
+    #loading user state id
     cnx = d.connect_to_database()
     cursor = cnx.cursor()
 

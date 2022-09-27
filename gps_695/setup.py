@@ -24,6 +24,7 @@ setup(name='gps_695',
             'emoji==1.6.3',
             'pandas',
             'numpy',
-            'tqdm'
+            'tqdm',
+            're'
       ],
       zip_safe=False)
