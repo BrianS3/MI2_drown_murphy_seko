@@ -15,6 +15,16 @@ setup(name='gps_695',
             'requests',
             'mysql',
             'pytrends',
-            'plotly'
+            'plotly',
+            'warnings',
+            'googletrans==3.1.0a0',
+            'gensim',
+            'operator',
+            'text2emotion',
+            'emoji==1.6.3',
+            'pandas',
+            'numpy',
+            'tqdm',
+            're'
       ],
       zip_safe=False)

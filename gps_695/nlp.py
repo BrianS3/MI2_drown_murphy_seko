@@ -10,6 +10,7 @@ def clean_tweets(df):
     '''
     import re
     from googletrans import Translator
+    import numpy as np
 
     data = df
     data.dropna(inplace=True)
@@ -17,11 +18,12 @@ def clean_tweets(df):
     # Remove photos and videos/usernames/digits/URLs
     # make lowercase and strip excess spaces
     data = data[~data.TWEET_TEXT.str.contains("Just posted a")]  # posts that are only photos/videos
-    data['TIDY_TWEET'] = [re.sub("@[\w]*", " ", item) for item in data['TWEET_TEXT']]  # usernames
-    data['TIDY_TWEET'] = [re.sub("[0-9]", " ", item) for item in data['TIDY_TWEET']]  # digits
+    data['TIDY_TWEET'] = [re.sub("@[\w]*", "", item) for item in data['TWEET_TEXT']]  # usernames
+    data['TIDY_TWEET'] = [re.sub("[0-9]", "", item) for item in data['TIDY_TWEET']]  # digits
     data['TIDY_TWEET'] = [re.sub(r"https?:\/\/.*[\r\n]*", "", item) for item in data['TIDY_TWEET']]  # URLs
-    data['TIDY_TWEET'] = [re.sub(r"[^\w'\s]+", " ", item) for item in data['TIDY_TWEET']]  # punctuation
-    data['TIDY_TWEET'] = [item.lower().strip() for item in data['TIDY_TWEET']] # extra spaces
+    data['TIDY_TWEET'] = [re.sub(r"[^\w'\s]+", "", item) for item in data['TIDY_TWEET']]  # punctuation
+    data['TIDY_TWEET'] = [re.sub(r"RT ", "", item) for item in data['TIDY_TWEET']]  # if initial tweet by user is labeled as a retweet
+    data['TIDY_TWEET'] = data['TIDY_TWEET'].str.lower().str.strip() # extra spaces
 
     # Remove empty strings
     data['TIDY_TWEET'].replace('', np.nan, inplace=True)
@@ -30,7 +32,7 @@ def clean_tweets(df):
     # Detect language and translate
     translator = Translator()
     for i, item in enumerate(data['TIDY_TWEET']):
-        lang = detect(item)
+        lang = translator.detect(item)
         data.loc[i, 'TWEET_LANG'] = lang
 
         # translating non-English tweets
@@ -53,7 +55,6 @@ def clean_tweets(df):
 
 # create cleaned tweet dataframe
 
-
 # function to get lemmatized tweets from clean tweets
 def lemmatize(df):
     '''INPUT: df with tidy_tweet column
@@ -62,6 +63,7 @@ def lemmatize(df):
     lemmatizes
     RETURNS: original df with added LEMM column
     '''
+    from nltk.corpus import stopwords
 
     # tokenize
     tokens = []
@@ -97,8 +99,6 @@ def lemmatize(df):
         lemms.append(l)
 
     df['LEMM'] = lemms
-        
-    return df
 
 
 def analyze_tweets(df):
@@ -108,7 +108,6 @@ def analyze_tweets(df):
     *determined by top emotions(highest=0: neutral; highest>1: mixed
     OUTPUT: df with columns TWEET_ID, OVERALL_EMO
     '''
-#     from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
     import text2emotion as te
 
     # get emotion scores and predominant tweet emotion(s)
@@ -117,7 +116,6 @@ def analyze_tweets(df):
         emo = te.get_emotion(item)
         emos.append(emo)
     df['TWEET_EMO'] = emos
-
 
     predominant_emotion = []
     pred_emo_score = [] ##
@@ -138,7 +136,6 @@ def analyze_tweets(df):
             if sorted_value_key_pairs[i][1]==a and i!=0 and a!=0:
                 emos.append(sorted_value_key_pairs[i][0])
 
-
         predominant_emotion.append(emos)
         pred_emo_score.append(emo_scores) ##
         
@@ -151,21 +148,21 @@ def analyze_tweets(df):
     df['OVERALL_EMO'] = predominant_emotion
     df['OVERALL_EMO_SCORE'] = pred_emo_score
 
-    return df[['TWEET_ID', 'OVERALL_EMO', 'OVERALL_EMO_SCORE']]
-
 
 ##### UNSUPERVISED LEARNING MODEL #####
 
 def get_associated_keywords(df, search_term, returned_items=3):
-    '''INPUT: df with LEMM column
+    '''
+    INPUT: df with LEMM column
     search_term: the search term associated with the news event/tweets
     returned_items: integer value to specify how many keywords max you want returned
     OUTPUT: list of strings representing keywords associated with search_term
     '''
     from sklearn.decomposition import NMF
     from sklearn.feature_extraction.text import TfidfVectorizer
-    
-   
+    import numpy as np
+    import pandas as pd
+
     # Find best number of components to use
 
     from gensim import corpora
