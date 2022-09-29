@@ -301,6 +301,8 @@ def gridsearch(search_term):
     from gps_695 import database as d
     from gps_695 import nlp as n
     from itertools import product
+    import os
+    os.mkdir("output_data/")
 
     cnx = d.connect_to_database()
     query = f"""select LEMM from TWEET_TEXT where lower(SEARCH_TERM) = '{search_term}';"""
