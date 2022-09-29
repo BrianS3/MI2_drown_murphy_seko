@@ -150,11 +150,14 @@ def analyze_tweets(df):
 
 ##### UNSUPERVISED LEARNING MODEL #####
 
-def get_associated_keywords(df, search_term, returned_items=3):
+def get_associated_keywords(df, search_term, returned_items=3,topic_nums_input = 5,perc_in_words=0.1, **kwargs):
     '''
     INPUT: df with LEMM column
     search_term: the search term associated with the news event/tweets
     returned_items: integer value to specify how many keywords max you want returned
+    topic_nums_input: the number of topics to model from LDA
+    perc_in_words: the smallest threshold required for word frequency. If this is set to 10%, then 10% of all words must have the terms.
+    Lowering this value produces more variety.
     OUTPUT: list of strings representing keywords associated with search_term
     '''
     from sklearn.decomposition import NMF
@@ -169,41 +172,46 @@ def get_associated_keywords(df, search_term, returned_items=3):
     from gensim.models.coherencemodel import CoherenceModel
     from operator import itemgetter
 
+    search_term = search_term.lower()
+
     # Convert to bag of words
-    texts = df['LEMM']
+
+    lemms = df['LEMM']
+    texts = []
+    for lemm in lemms:
+        texts.append(lemm.replace('"', '').replace("'", '').split())
     dictionary = corpora.Dictionary(texts)
-    topic_nums = list(np.arange(1, 6)) # tested up to 100 topics, with same results as 5 topics (but significantly slower)
-    
+    topic_nums = list(np.arange(1, (topic_nums_input+1)))  # tested up to 100 topics, with same results as 5 topics (but significantly slower)
+
     corpus = [dictionary.doc2bow(text) for text in texts]
 
     # Get coherence scores with LDA
     coherence_scores = []
     for num in topic_nums:
-        model = LdaModel(corpus, num, dictionary)#, random_state=42)
+        model = LdaModel(corpus, num, dictionary)  # , random_state=42)
         cm = CoherenceModel(model=model, texts=texts, corpus=corpus, coherence='c_v')
-    
+
     coherence_scores.append(round(cm.get_coherence(), 5))
-    
 
     # Get number of components with the highest coherence score
     scores = list(zip(topic_nums, coherence_scores))
     best_num_topics = sorted(scores, key=itemgetter(1), reverse=True)[0][0]
-   
-    # Turn list of lemmatized words into a string for analysis
-    df2=df.copy()
-    for i, lemm in enumerate(df2['LEMM']):
-        lemm2 = " ".join(lemm)
-        df2.loc[i, 'LEMM'] = lemm2
 
-#     df2 = df2.sample(500) # testing to see if 500 tweets is enough--results are the same top 3 as 1000
+    # Turn list of lemmatized words into a string for analysis
+    df2 = df.copy()
+    for ind, row in df2.iterrows():
+        lemm2 = "".join(row['LEMM'].replace("[", "").replace("'", "").replace("]", '').replace(",", ""))
+        row['LEMM'] = lemm2
+
+    #     df2 = df2.sample(500) # testing to see if 500 tweets is enough--results are the same top 3 as 1000
 
     # Perform NMF unsupervised learning to find topics
-    vect = TfidfVectorizer(min_df=int(np.round(0.1*len(df))), stop_words='english', ngram_range=(2,2))
-    
+    vect = TfidfVectorizer(min_df=int(np.round(perc_in_words * len(df))), stop_words='english', ngram_range=(2, 2))
+
     # term must appear in 10% of tweets, looking for bigrams
     try:
         X = vect.fit_transform(df2.LEMM)
-        model = NMF(n_components=best_num_topics)#, random_state=42)
+        model = NMF(n_components=best_num_topics, **kwargs)  # , random_state=42)
         # max_iter tested @ default(200), 500, 1000, 10k: all resulted in the same output
         model.fit(X)
         nmf_features = model.transform(X)
@@ -215,29 +223,24 @@ def get_associated_keywords(df, search_term, returned_items=3):
             for word in associated_keywords:
                 if search_term in word:
                     associated_keywords.remove(word)
-        return associated_keywords[:returned_items]
+        return associated_keywords[:]
 
     except ValueError:
         return "Could not find associated topics."
 
-    
-    
-    
 def evaluate_keywords(search_term, keyword_list):
     '''
     INPUT: original search_term, list of associated search terms found by get_associated_keywords()
     Uses distance metric to determine the closest 2 terms to original search_term based on Google Trends
     OUTPUT: list of 2 closest terms (strings)
     '''
-    
+    from sklearn.metrics import mean_squared_error
+    search_term = search_term.lower()
     if len(keyword_list) < 3:
         return keyword_list
     
     kw = keyword_list
-    kw.insert(0,search_term)
-    
-    term_dict = {'AB':kw[1], 'AC':kw[2], 'AD':kw[3]}
-    
+
     def check_trend(kw_list):
         """
         Uses google trend to build a simple line chart of the current trend by keyword/phrase
@@ -246,28 +249,103 @@ def evaluate_keywords(search_term, keyword_list):
         """
         from pytrends.request import TrendReq
         pytrends = TrendReq(hl='en-US', tz=360)
-        pytrends.build_payload(kw_list, cat=0, timeframe='today 12-m')
+        try:
+            pytrends.build_payload(kw_list, cat=0, timeframe='today 12-m')
+        except:
+            print("OOF, looks like this is a heavy run, we need to wait for the API to rest")
+            print("API Reset in:")
+            countdown()
+            print("Alright, let's continue")
+            pytrends.build_payload(kw_list, cat=0, timeframe='today 12-m')
         data = pytrends.interest_over_time()
         data = data.reset_index()
 
-        return data
+        return data[kw_list[0]]
 
-    trend = check_trend(kw)
+    def countdown(t=100):
+        """
+        Timer for user to countdown for API reset
+        :param t: input time, default is 100 seconds
+        :return:
+        """
+        while t:
+            mins, secs = divmod(t, 60)
+            timer = '{:02d}:{:02d}'.format(mins, secs)
+            print(timer, end="\r")
+            time.sleep(1)
+            t -= 1
 
-    a = trend[kw[0]]
-    b = trend[kw[1]]
-    c = trend[kw[2]]
-    d = trend[kw[3]]
-    
-    from sklearn.metrics import mean_squared_error
-    trend['AB'] = mean_squared_error(a,b)
-    trend['AC'] = mean_squared_error(a,c)
-    trend['AD'] = mean_squared_error(a,d)
-    
-    sum_dict = {'AB':trend['AB'].sum(), 'AC':trend['AC'].sum(), 'AD':trend['AD'].sum()}
-    sort_sum_dict = sorted(sum_dict.items(), key=lambda x:x[1])
-    
-    top_scoring = [sort_sum_dict[:2][0][0], sort_sum_dict[:2][1][0]]
-    top_terms = [term_dict[item] for item in top_scoring]
-    
-    return top_terms
+    search_trend_list = [search_term]
+    search_trend = check_trend(search_trend_list)
+
+    trend_dict = {}
+    for k in kw:
+        temp_list = []
+        temp_list.append(k)
+        trend_dict[k] = check_trend(temp_list)
+
+    final = []
+    for k,v in trend_dict.items():
+        final.append((k, round(mean_squared_error(search_trend,trend_dict[k]),4)))
+
+    return final
+
+
+def gridsearch(search_term):
+    """
+    Function performs a grid search to optimize the model parameters for obtaining associated keywords.
+    :param search_term: search term used in load_tweets function
+    :return: top two keywords as a list with lowest MSE from google trends, to search term.
+    """
+    import pandas as pd
+    from gps_695 import database as d
+    from gps_695 import nlp as n
+    from itertools import product
+    import os
+    os.mkdir("output_data/")
+
+    cnx = d.connect_to_database()
+    query = f"""select LEMM from TWEET_TEXT where lower(SEARCH_TERM) = '{search_term}';"""
+    df = pd.read_sql_query(query, cnx)
+
+    alphas = [0, 0.5, 1]
+    l1_ratios = [0, 5, 10]
+    percents = [0.1, 0.05, 0.01]
+
+    grid_search_params = list(product(alphas, l1_ratios, percents))
+
+    param_df = pd.DataFrame(
+        grid_search_params,
+        columns=['alpha', 'l1_ratio', 'percents'])
+
+    grid_search_results = pd.DataFrame()
+
+    count = 0
+    file = open('output_data/grid_search.txt', 'w')
+    for ind, row in param_df.iterrows():
+        alpha_val = row['alpha']
+        l1_val = row['l1_ratio']
+        perc_val = row['percents']
+
+        file = open('output_data/grid_search.txt', 'a')
+        file.write(f"{ind} -- alpha:{alpha_val}  l1_ratio:{l1_val} perc in words:{perc_val} \n")
+
+        kw_list = n.get_associated_keywords(df, search_term, perc_in_words=perc_val.astype(float),
+                                            alpha_W=alpha_val.astype(float), l1_ratio=l1_val.astype(int))
+        file.write(f"{kw_list}")
+        file.write("\n")
+        file.close()
+
+        if kw_list != "Could not find associated topics.":
+            top_terms = n.evaluate_keywords(search_term, kw_list)
+            grid_search_results = pd.concat([grid_search_results, pd.DataFrame(top_terms, columns=['term', 'mse'])])
+            count += 1
+        else:
+            count += 1
+            continue
+
+    grid_search_results = grid_search_results.drop_duplicates()
+    grid_search_results = grid_search_results.sort_values('mse')
+    associated_words = list(grid_search_results['term'].iloc[:2])
+
+    return associated_words
