@@ -174,9 +174,12 @@ def get_associated_keywords(df, search_term, returned_items=3,topic_nums_input =
 
     search_term = search_term.lower()
 
+    #split to avoid data leakage
+    part_80 = df.sample(frac = 0.8).reset_index(drop=True) # for NMF topic selection
+    part_20 = df.drop(part_80.index).reset_index(drop=True) #for LDA n_components selection
+    
     # Convert to bag of words
-
-    lemms = df['LEMM']
+    lemms = part_20.LEMM
     texts = []
     for lemm in lemms:
         texts.append(lemm.replace('"', '').replace("'", '').split())
@@ -198,7 +201,7 @@ def get_associated_keywords(df, search_term, returned_items=3,topic_nums_input =
     best_num_topics = sorted(scores, key=itemgetter(1), reverse=True)[0][0]
 
     # Turn list of lemmatized words into a string for analysis
-    df2 = df.copy()
+    df2 = part_80.copy()
     for ind, row in df2.iterrows():
         lemm2 = "".join(row['LEMM'].replace("[", "").replace("'", "").replace("]", '').replace(",", ""))
         row['LEMM'] = lemm2
