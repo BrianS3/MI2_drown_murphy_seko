@@ -7,7 +7,7 @@ def connect_to_database():
     import sqlalchemy
     connection_string = f'mysql://{os.getenv("mysql_username")}:{os.getenv("mysql_pass")}@{os.getenv("db_host")}:3306/{os.getenv("database")}'
     engine = sqlalchemy.create_engine(connection_string)
-    cnx = engine.raw_connection()
+    cnx = engine.connect()
 
     return cnx
 
@@ -17,7 +17,8 @@ def create_mysql_database():
     :return: None
     """
     from gps_695 import database as d
-    import mysql
+    # import mysql
+    # import sqlalchemy
     # from mysql.connector import connect, Error
 
     file = open('gps_695/database_table_creation.sql', 'r')
@@ -25,15 +26,8 @@ def create_mysql_database():
     file.close
 
     cnx = d.connect_to_database()
-    cursor = cnx.cursor()
-
-    try:
-        cursor.execute(sql)
-    except mysql.connector.Error as err:
-        print("Error in create_mysql_database")
-        print("Something went wrong: {}".format(err))
-
-    cursor.close()
+    cnx.execute(sql)
+    cnx.close()
 
 def reset_mysql_database():
     """
@@ -41,24 +35,15 @@ def reset_mysql_database():
     :return: None
     """
     from gps_695 import database as d
-    import mysql
-    #from mysql.connector import connect, Error
 
     file = open('gps_695/database_clear.sql', 'r')
     sql = file.read()
     file.close
 
     cnx = d.connect_to_database()
-    cursor = cnx.cursor()
-
-    try:
-        cursor.execute(sql)
-    except mysql.connector.Error as err:
-        print("Error in reset_mysql_database")
-        print("Something went wrong: {}".format(err))
-
+    cnx.execute(sql)
+    cnx.close()
     d.create_mysql_database()
-    cursor.close()
     print("Database fully reset")
 
 def check_trend(*args):
@@ -139,7 +124,6 @@ def load_tweets(keyword, start_date, end_date, results = 500):
 
     cnx = d.connect_to_database()
     print("Connection established with database")
-    cursor = cnx.cursor()
 
     for ind, row in df_text.iterrows():
         try:
@@ -157,7 +141,7 @@ def load_tweets(keyword, start_date, end_date, results = 500):
                  ,"{row[column_list[6]]}"
                  );
                  """)
-                cursor.execute(query)
+                cnx.execute(query)
             except:
                 query = (f"""
                  INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM, OVERALL_EMO, OVERALL_EMO_SCORE)
@@ -172,10 +156,9 @@ def load_tweets(keyword, start_date, end_date, results = 500):
                  ,'{row[column_list[6]]}'
                  );
                  """)
-                cursor.execute(query)
+                cnx.execute(query)
         except:
             continue
-    cnx.commit()
     print("Data table 'tweet_text' loaded")
 
     # loading users
@@ -214,7 +197,7 @@ def load_tweets(keyword, start_date, end_date, results = 500):
                              ,'{row[column_list[7]]}'
                              );
                              """)
-                cursor.execute(query)
+                cnx.execute(query)
             except:
                 query = (f"""
                              INSERT INTO USERS
@@ -229,16 +212,12 @@ def load_tweets(keyword, start_date, end_date, results = 500):
                              ,"{row[column_list[7]]}"
                              );
                              """)
-                cursor.execute(query)
+                cnx.execute(query)
         except:
             continue
-    cnx.commit()
     print("Data table 'users' loaded")
 
     #loading user state id
-    cnx = d.connect_to_database()
-    cursor = cnx.cursor()
-
     query = "SELECT STATE, STATE_ABBR, STATE_ID FROM US_STATES"
     results = pd.read_sql_query(query, cnx)
 
@@ -275,10 +254,9 @@ def load_tweets(keyword, start_date, end_date, results = 500):
                         ,"{row[column_list[1]]}"
                         );
                         """)
-            cursor.execute(query)
+            cnx.execute(query)
         except:
             continue
-    cnx.commit()
     print("Data table 'author_location' loaded")
-    cursor.close()
+    cnx.close()
     print("Load process complete")
