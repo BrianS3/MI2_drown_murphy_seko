@@ -3,11 +3,12 @@ def connect_to_database():
     Creates connection to mysql database.
     :return: connection objects
     """
-    import mysql
-    from mysql.connector import connect
     import os
+    import sqlalchemy
+    connection_string = f'mysql://{os.getenv("mysql_username")}:{os.getenv("mysql_pass")}@{os.getenv("db_host")}:3306/{os.getenv("database")}'
+    engine = sqlalchemy.create_engine(connection_string)
+    cnx = engine.raw_connection()
 
-    cnx = mysql.connector.connect(user=f"{os.getenv('mysql_username')}", password=f"{os.getenv('mysql_pass')}", host=f"{os.getenv('db_host')}", database=f"{os.getenv('database')}")
     return cnx
 
 def create_mysql_database():
