@@ -226,10 +226,11 @@ def get_associated_keywords(df, search_term, returned_items=3,topic_nums_input =
             for word in associated_keywords:
                 if search_term in word:
                     associated_keywords.remove(word)
-        return associated_keywords[:]
+        return associated_keywords[:returned_items]
 
     except ValueError:
         return "Could not find associated topics."
+
 
 def evaluate_keywords(search_term, keyword_list):
     '''
@@ -237,12 +238,14 @@ def evaluate_keywords(search_term, keyword_list):
     Uses distance metric to determine the closest 2 terms to original search_term based on Google Trends
     OUTPUT: list of 2 closest terms (strings)
     '''
-    from sklearn.metrics import mean_squared_error
-    search_term = search_term.lower()
+
     if len(keyword_list) < 3:
         return keyword_list
-    
+
     kw = keyword_list
+    kw.insert(0, search_term)
+
+    term_dict = {'AB': kw[1], 'AC': kw[2], 'AD': kw[3]}
 
     def check_trend(kw_list):
         """
@@ -252,46 +255,31 @@ def evaluate_keywords(search_term, keyword_list):
         """
         from pytrends.request import TrendReq
         pytrends = TrendReq(hl='en-US', tz=360)
-        try:
-            pytrends.build_payload(kw_list, cat=0, timeframe='today 12-m')
-        except:
-            print("OOF, looks like this is a heavy run, we need to wait for the API to rest")
-            print("API Reset in:")
-            countdown()
-            print("Alright, let's continue")
-            pytrends.build_payload(kw_list, cat=0, timeframe='today 12-m')
+        pytrends.build_payload(kw_list, cat=0, timeframe='today 12-m')
         data = pytrends.interest_over_time()
         data = data.reset_index()
 
-        return data[kw_list[0]]
+        return data
 
-    def countdown(t=100):
-        """
-        Timer for user to countdown for API reset
-        :param t: input time, default is 100 seconds
-        :return:
-        """
-        while t:
-            mins, secs = divmod(t, 60)
-            timer = '{:02d}:{:02d}'.format(mins, secs)
-            print(timer, end="\r")
-            time.sleep(1)
-            t -= 1
+    trend = check_trend(kw)
 
-    search_trend_list = [search_term]
-    search_trend = check_trend(search_trend_list)
+    a = trend[kw[0]]
+    b = trend[kw[1]]
+    c = trend[kw[2]]
+    d = trend[kw[3]]
 
-    trend_dict = {}
-    for k in kw:
-        temp_list = []
-        temp_list.append(k)
-        trend_dict[k] = check_trend(temp_list)
+    from sklearn.metrics import mean_squared_error
+    trend['AB'] = mean_squared_error(a, b)
+    trend['AC'] = mean_squared_error(a, c)
+    trend['AD'] = mean_squared_error(a, d)
 
-    final = []
-    for k,v in trend_dict.items():
-        final.append((k, round(mean_squared_error(search_trend,trend_dict[k]),4)))
+    sum_dict = {'AB': trend['AB'].sum(), 'AC': trend['AC'].sum(), 'AD': trend['AD'].sum()}
+    sort_sum_dict = sorted(sum_dict.items(), key=lambda x: x[1])
 
-    return final
+    top_scoring = [sort_sum_dict[:2][0][0], sort_sum_dict[:2][1][0]]
+    top_terms = [term_dict[item] for item in top_scoring]
+
+    return top_terms
 
 
 def gridsearch(search_term):
@@ -305,7 +293,12 @@ def gridsearch(search_term):
     from gps_695 import nlp as n
     from itertools import product
     import os
-    os.mkdir("output_data/")
+
+    try:
+        os.mkdir("output_data/")
+        print("Created output directory")
+    except FileExistsError:
+        print("Output directory exists")
 
     cnx = d.connect_to_database()
     query = f"""select LEMM from TWEET_TEXT where lower(SEARCH_TERM) = '{search_term}';"""
