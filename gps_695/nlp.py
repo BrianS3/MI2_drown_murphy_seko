@@ -150,7 +150,7 @@ def analyze_tweets(df):
 
 ##### UNSUPERVISED LEARNING MODEL #####
 
-def get_associated_keywords(df, search_term, returned_items=3,topic_nums_input = 5,perc_in_words=0.1, **kwargs):
+def get_associated_keywords(df, search_term, returned_items=3,topic_nums_input=5,perc_in_words=0.1, **kwargs):
     '''
     INPUT: df with LEMM column
     search_term: the search term associated with the news event/tweets
@@ -165,43 +165,44 @@ def get_associated_keywords(df, search_term, returned_items=3,topic_nums_input =
     import numpy as np
     import pandas as pd
 
-    # Find best number of components to use
-
-    from gensim import corpora
-    from gensim.models.ldamodel import LdaModel
-    from gensim.models.coherencemodel import CoherenceModel
-    from operator import itemgetter
-
-    search_term = search_term.lower()
-
-    #split to avoid data leakage
-    part_80 = df.sample(frac = 0.8).reset_index(drop=True) # for NMF topic selection
-    part_20 = df.drop(part_80.index).reset_index(drop=True) #for LDA n_components selection
-    
-    # Convert to bag of words
-    lemms = part_20.LEMM
-    texts = []
-    for lemm in lemms:
-        texts.append(lemm.replace('"', '').replace("'", '').split())
-    dictionary = corpora.Dictionary(texts)
-    topic_nums = list(np.arange(1, (topic_nums_input+1)))  # tested up to 100 topics, with same results as 5 topics (but significantly slower)
-
-    corpus = [dictionary.doc2bow(text) for text in texts]
-
-    # Get coherence scores with LDA
-    coherence_scores = []
-    for num in topic_nums:
-        model = LdaModel(corpus, num, dictionary)  # , random_state=42)
-        cm = CoherenceModel(model=model, texts=texts, corpus=corpus, coherence='c_v')
-
-    coherence_scores.append(round(cm.get_coherence(), 5))
-
-    # Get number of components with the highest coherence score
-    scores = list(zip(topic_nums, coherence_scores))
-    best_num_topics = sorted(scores, key=itemgetter(1), reverse=True)[0][0]
-
-    # Turn list of lemmatized words into a string for analysis
-    df2 = part_80.copy()
+    # # Find best number of components to use
+    #
+    # from gensim import corpora
+    # from gensim.models.ldamodel import LdaModel
+    # from gensim.models.coherencemodel import CoherenceModel
+    # from operator import itemgetter
+    #
+    # search_term = search_term.lower()
+    #
+    # #split to avoid data leakage
+    # part_80 = df.sample(frac = 0.8).reset_index(drop=True) # for NMF topic selection
+    # part_20 = df.drop(part_80.index).reset_index(drop=True) #for LDA n_components selection
+    #
+    # # Convert to bag of words
+    # lemms = part_20.LEMM
+    # texts = []
+    # for lemm in lemms:
+    #     texts.append(lemm.replace('"', '').replace("'", '').split())
+    # dictionary = corpora.Dictionary(texts)
+    # topic_nums = list(np.arange(1, (topic_nums_input+1)))  # tested up to 100 topics, with same results as 5 topics (but significantly slower)
+    #
+    # corpus = [dictionary.doc2bow(text) for text in texts]
+    #
+    # # Get coherence scores with LDA
+    # coherence_scores = []
+    # for num in topic_nums:
+    #     model = LdaModel(corpus, num, dictionary)  # , random_state=42)
+    #     cm = CoherenceModel(model=model, texts=texts, corpus=corpus, coherence='c_v')
+    #
+    # coherence_scores.append(round(cm.get_coherence(), 5))
+    #
+    # # Get number of components with the highest coherence score
+    # scores = list(zip(topic_nums, coherence_scores))
+    # best_num_topics = sorted(scores, key=itemgetter(1), reverse=True)[0][0]
+    #
+    # # Turn list of lemmatized words into a string for analysis
+    # df2 = part_80.copy()
+    df2 = df.copy()
     for ind, row in df2.iterrows():
         lemm2 = "".join(row['LEMM'].replace("[", "").replace("'", "").replace("]", '').replace(",", ""))
         row['LEMM'] = lemm2
@@ -214,10 +215,11 @@ def get_associated_keywords(df, search_term, returned_items=3,topic_nums_input =
     # term must appear in 10% of tweets, looking for bigrams
     try:
         X = vect.fit_transform(df2.LEMM)
-        model = NMF(n_components=best_num_topics, **kwargs)  # , random_state=42)
+        # model = NMF(n_components=best_num_topics, **kwargs)  # , random_state=42)
+        model = NMF(**kwargs)  # , random_state=42)
         # max_iter tested @ default(200), 500, 1000, 10k: all resulted in the same output
         model.fit(X)
-        nmf_features = model.transform(X)
+        # nmf_features = model.transform(X)
 
         components_df = pd.DataFrame(model.components_, columns=vect.get_feature_names_out())
         for topic in range(components_df.shape[0]):
