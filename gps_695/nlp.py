@@ -37,10 +37,11 @@ def clean_tweets(df):
         lang = translator.detect(item)
         data.loc[i, 'TWEET_LANG'] = lang
 
-        # translating non-English tweets
-        if data['TWEET_LANG'][i] != 'en':
-            translated = translator.translate(item)
-            data.loc[i, 'TIDY_TWEET'] = translated.text
+    data = data[data.TWEET_LANG == 'en']  # removing non-English tweets
+        # # translating non-English tweets
+        # if data['TWEET_LANG'][i] != 'en':
+        #     translated = translator.translate(item)
+        #     data.loc[i, 'TIDY_TWEET'] = translated.text
 
     # Remove empty strings
     data['TIDY_TWEET'].replace('', np.nan, inplace=True)
@@ -258,13 +259,6 @@ def gridsearch(search_term):
     from gps_695 import database as d
     from gps_695 import nlp as n
     from itertools import product
-    import os
-
-    try:
-        os.mkdir("output_data/")
-        print("Created output directory")
-    except FileExistsError:
-        print("Output directory exists")
 
     cnx = d.connect_to_database()
     query = f"""select LEMM from TWEET_TEXT where lower(SEARCH_TERM) = '{search_term}';"""
@@ -310,6 +304,7 @@ def gridsearch(search_term):
                     continue
 
     grid_search_results = grid_search_results.drop_duplicates()
+    grid_search_results.to_csv('output_data/grid_search.csv')
     grid_search_results = grid_search_results.sort_values('mse')
     associated_words = list(grid_search_results['term'].iloc[:2])
 
