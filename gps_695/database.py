@@ -260,3 +260,89 @@ def load_tweets(keyword, start_date, end_date, results = 500):
     print("Data table 'author_location' loaded")
     cnx.close()
     print("Load process complete")
+
+def database_load(search_term):
+    """
+    Full ETL process of loading initial search term in databse, extracting related terms and loading these to predict sentiment and time to live
+    :param search_term: term used to search and predict sentiment/time to live
+    :return: No objects returned, database is loaded
+    """
+    from gps_695 import database as d
+    from gps_695 import nlp as n
+    import datetime as dt
+    from tqdm import tqdm
+    import os
+    import pandas as pd
+
+    try:
+        os.mkdir("output_data/")
+        print("Created output directory")
+    except FileExistsError:
+        pass
+
+    print(f'Resetting database new search: "{search_term}" on {(dt.datetime.now()+dt.timedelta(days=-1)).strftime("%Y-%m-%d")}')
+    d.reset_mysql_database()
+    d.load_tweets(search_term, (dt.datetime.now()+dt.timedelta(days=-1)).strftime("%Y-%m-%d"), dt.datetime.now().strftime("%Y-%m-%d"), 500)
+    print("Evaluating associated terms...")
+    results = n.gridsearch(search_term)
+    results.append(search_term)
+
+    for term in tqdm(results):
+        for i in range(1, 26):
+            start_date = dt.datetime.now()+dt.timedelta(days=-i-1)
+            start_date = start_date.strftime('%Y-%m-%d')
+            end_date = dt.datetime.now()+dt.timedelta(days=-i)
+            end_date = end_date.strftime('%Y-%m-%d')
+            try:
+                d.load_tweets(term, start_date, end_date, 500)
+            except:
+                print(f"There were no tweets for {term} on {start_date}")
+
+    cnx = d.connect_to_database()
+    query1 = f"""
+    SELECT
+    CREATED,
+    COUNT(TWEET_ID) AS TWEET_COUNT,
+    SEARCH_TERM,
+    CASE WHEN SEARCH_TERM = '{search_term}' then 1 else 0 end as primary_search_term
+    FROM TWEET_TEXT
+    GROUP BY CREATED, SEARCH_TERM
+    ;
+    """
+    df1 = pd.read_sql_query(query1,cnx)
+
+    query2 = """
+    SELECT
+    R.REGION
+    ,D.DIVISION
+    ,S.STATE_ABBR
+    ,COUNT(A.AUTHOR_ID) AS AUTHOR_COUNT
+    FROM AUTHOR_LOCATION A
+    LEFT JOIN US_STATES S ON S.STATE_ID = A.STATE_ID
+    LEFT JOIN DIVISIONS D ON D.DIV_ID = S.DIV_ID
+    LEFT JOIN REGIONS R ON R.REG_ID = D.REG_ID
+    GROUP BY R.REGION, D.DIVISION, S.STATE_ABBR
+    ;
+    """
+    df2 = pd.read_sql_query(query2, cnx)
+
+    query3 = """
+        SELECT
+        SEARCH_TERM,
+        OVERALL_EMO,
+        ROUND(AVG(OVERALL_EMO_SCORE),2) AS AVERAGE_EMO_SCORE
+        FROM TWEET_TEXT
+        GROUP BY SEARCH_TERM, OVERALL_EMO
+        ;
+        """
+    df3 = pd.read_sql_query(query3, cnx)
+    df3_out = pd.pivot_table(df3, index=['OVERALL_EMO'], columns=['SEARCH_TERM'], values='AVERAGE_EMO_SCORE')
+
+    writer = pd.ExcelWriter('output_data/load_process_metrics.xlsx', engine='xlsxwriter')
+    df1.to_excel(writer, sheet_name='SEARCH_METRICS')
+    df2.to_excel(writer, sheet_name='LOCATION_METRICS')
+    df3_out.to_excel(writer, sheet_name='SENTIMENT_METRICS')
+    writer.save()
+    writer.close()
+
+    print("Load Process Complete")
