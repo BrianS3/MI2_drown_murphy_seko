@@ -270,7 +270,7 @@ def gridsearch(search_term):
                 continue
             else:
                 if kw_list != "Could not find associated topics.":
-                    top_terms = n.evaluate_keywords(search_term=search_term, keyword_list=kw_list, search_results = grid_search_results)
+                    top_terms = n.evaluate_keywords(search_term=search_term, keyword_list=kw_list)
                     grid_search_results = pd.concat([grid_search_results, pd.DataFrame(top_terms, columns=['term', 'mse'])])
                 else:
                     continue
