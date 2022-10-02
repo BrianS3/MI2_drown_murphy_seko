@@ -34,7 +34,7 @@ def clean_tweets(df):
     # Detect language and translate
     translator = Translator()
     for i, item in enumerate(data['TIDY_TWEET']):
-        lang = translator.detect(item)
+        lang = translator.detect(item).lang
         data.loc[i, 'TWEET_LANG'] = lang
 
     data = data[data.TWEET_LANG == 'en']  # removing non-English tweets
