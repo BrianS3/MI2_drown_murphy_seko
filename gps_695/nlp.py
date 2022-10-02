@@ -10,6 +10,7 @@ def clean_tweets(df):
     import re
     from googletrans import Translator
     import numpy as np
+    from langdetect import detect
 
     data = df
     data.dropna(inplace=True)
@@ -32,9 +33,16 @@ def clean_tweets(df):
     translator = Translator()
     for i, item in enumerate(data['TIDY_TWEET']):
         lang = translator.detect(item).lang
+
+        if len(lang)>1:
+            lang = ['mixed']
         data.loc[i, 'TWEET_LANG'] = lang
 
     data = data[data.TWEET_LANG == 'en']  # removing non-English tweets
+
+    for i, item in enumerate(data['TIDY_TWEET']):
+        lang = detect(item)
+        data.loc[i, 'TWEET_LANG'] = lang
 
     # Remove empty strings
     data['TIDY_TWEET'].replace('', np.nan, inplace=True)
