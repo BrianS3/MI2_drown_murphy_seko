@@ -1,14 +1,11 @@
-import pandas as pd
-
-
 def clean_tweets(df):
     '''
-    INPUT: Pandas DataFrame from database data.
     Removes tweets that are sent when a person posts a video or photo only;
     removes URLS, username mentions from tweet text;
-    translates non-English Tweets;
+    removes non-english tweets;
     isolates hashtags;
-    OUTPUT: original df with added columns TIDY_TWEET, TWEET_LANG, HASHTAGS
+    :param df: Pandas DataFrame from database data.
+    :return: original df with added columns TIDY_TWEET, TWEET_LANG, HASHTAGS
     '''
     import re
     from googletrans import Translator
@@ -38,10 +35,6 @@ def clean_tweets(df):
         data.loc[i, 'TWEET_LANG'] = lang
 
     data = data[data.TWEET_LANG == 'en']  # removing non-English tweets
-        # # translating non-English tweets
-        # if data['TWEET_LANG'][i] != 'en':
-        #     translated = translator.translate(item)
-        #     data.loc[i, 'TIDY_TWEET'] = translated.text
 
     # Remove empty strings
     data['TIDY_TWEET'].replace('', np.nan, inplace=True)
@@ -56,9 +49,6 @@ def clean_tweets(df):
 
     return data
 
-# create cleaned tweet dataframe
-
-# function to get lemmatized tweets from clean tweets
 def lemmatize(df):
     '''INPUT: df with tidy_tweet column
     tokenizes;
@@ -105,10 +95,11 @@ def lemmatize(df):
 
 def analyze_tweets(df):
     '''
-    INPUT: Pandas DataFrame with TIDY_TWEET column
+    Analyzes tweets for sentiment analysis
     Get emotions: Happy, Angry, Surprise, Sad, Fear, *Neutral, *Mixed
     *determined by top emotions(highest=0: neutral; highest>1: mixed
-    OUTPUT: df with columns TWEET_ID, OVERALL_EMO
+    :param df: Pandas DataFrame with TIDY_TWEET column
+    :return: df with columns TWEET_ID, OVERALL_EMO
     '''
     import text2emotion as te
 
@@ -150,18 +141,16 @@ def analyze_tweets(df):
     df['OVERALL_EMO'] = predominant_emotion
     df['OVERALL_EMO_SCORE'] = pred_emo_score
 
-
-##### UNSUPERVISED LEARNING MODEL #####
-
-def get_associated_keywords(df, search_term, returned_items=3,topic_nums_input=5,perc_in_words=0.1, **kwargs):
+def get_associated_keywords(df, search_term, returned_items=3, perc_in_words=0.1, **kwargs):
     '''
-    INPUT: df with LEMM column
-    search_term: the search term associated with the news event/tweets
-    returned_items: integer value to specify how many keywords max you want returned
-    topic_nums_input: the number of topics to model from LDA
-    perc_in_words: the smallest threshold required for word frequency. If this is set to 10%, then 10% of all words must have the terms.
+    Function finds the associated keywords from the initial data load
+    :param df: df with LEMM column
+    :param search_term: the search term associated with the news event/tweets
+    :param returned_items: integer value to specify how many keywords max you want returned
+    :param perc_in_words: the smallest threshold required for word frequency. If this is set to 10%, then 10% of all words must have the terms.
+    :param **kwargs: keyword arguments from sklearn NMF model for grid search
     Lowering this value produces more variety.
-    OUTPUT: list of strings representing keywords associated with search_term
+    :return: list of strings representing keywords associated with search_term
     '''
     from sklearn.decomposition import NMF
     from sklearn.feature_extraction.text import TfidfVectorizer
@@ -193,22 +182,19 @@ def get_associated_keywords(df, search_term, returned_items=3,topic_nums_input=5
     except ValueError:
         return "Could not find associated topics."
 
-
-def evaluate_keywords(search_term, keyword_list, search_results):
+def evaluate_keywords(search_term, keyword_list):
     '''
     Original search_term, list of associated search terms found by get_associated_keywords()
     Uses distance metric to determine the closest 2 terms to original search_term based on Google Trends
+    :param search_term: search term used in primary data loading
+    :param keyword_list: keyword list returned from get_associated_keywords
     :return: OUTPUT list of 2 closest terms (strings)
     '''
     import pandas as pd
     from sklearn.metrics import mean_squared_error
-    # if len(keyword_list) < 3:
-    #     return keyword_list
 
     kw = keyword_list
     kw.insert(0, search_term)
-
-    # term_dict = {'AB': kw[1], 'AC': kw[2], 'AD': kw[3]}
 
     def check_trend(kw_list):
         """
@@ -235,18 +221,6 @@ def evaluate_keywords(search_term, keyword_list, search_results):
         temp = pd.DataFrame(list(zip([kw[i]],[mean_squared_error(trend_check,trend_compare)])), columns=['term', 'mse'])
         out_data = pd.concat([out_data,temp])
 
-
-    # trend['AB'] = mean_squared_error(a, b)
-    # trend['AC'] = mean_squared_error(a, c)
-    # trend['AD'] = mean_squared_error(a, d)
-    #
-    # sum_dict = {'AB': trend['AB'].sum(), 'AC': trend['AC'].sum(), 'AD': trend['AD'].sum()}
-    # sort_sum_dict = sorted(sum_dict.items(), key=lambda x: x[1])
-    # top_scoring = [sort_sum_dict[:2][0][0], sort_sum_dict[:2][1][0]]
-    # top_terms = [term_dict[item] for item in top_scoring]
-
-    # return top_terms
-    # return pd.DataFrame(zip(term_dict.values(),sum_dict.values()), columns=['term', 'mse'])
     return out_data
 
 def gridsearch(search_term):

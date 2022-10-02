@@ -306,7 +306,7 @@ def database_load(search_term):
     SEARCH_TERM,
     CASE WHEN SEARCH_TERM = '{search_term}' then 1 else 0 end as primary_search_term
     FROM TWEET_TEXT
-    GROUP BY CREATED
+    GROUP BY CREATED, SEARCH_TERM
     ;
     """
     df1 = pd.read_sql_query(query1,cnx)
