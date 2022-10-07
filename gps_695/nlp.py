@@ -176,7 +176,7 @@ def get_associated_keywords(df, search_term, perc_in_words=0.1, **kwargs):
                 if search_term in word:
                     associated_keywords.remove(word)
                     print("")
-        return associated_keywords[:3]
+        return associated_keywords[:2]
 
     except ValueError:
         return "Could not find associated topics."
@@ -194,6 +194,7 @@ def evaluate_keywords(search_term, keyword_list):
 
     kw = keyword_list
     kw.insert(0, search_term)
+
 
     def check_trend(kw_list):
         """
