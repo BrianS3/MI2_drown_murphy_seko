@@ -2,3 +2,4 @@
 scratch.py
 output_data/
 .idea
+*.pyc
