@@ -121,13 +121,10 @@ def load_tweets(keyword, start_date, end_date, results = 500, first_run=True):
         print("Sentiment analysis complete")
     else:
         print("Skipping sentiment analysis...")
-        # df_text['OVERALL_EMO'] = None
-        # df_text['OVERALL_EMO_SCORE'] = np.NAN
     print("Beep Boop Beep Boop Boop...Processing")
     n.lemmatize(df_text)
     if first_run == True:
-        df_text = df_text[['TWEET_ID', 'AUTHOR_ID', 'CREATED', 'TIDY_TWEET', 'LEMM', 'OVERALL_EMO', 'OVERALL_EMO_SCORE']]
-        df_text['OVERALL_EMO_SCORE'] = round(df_text['OVERALL_EMO_SCORE'], 2)
+        df_text = df_text[['TWEET_ID', 'AUTHOR_ID', 'CREATED', 'TIDY_TWEET', 'LEMM', 'OVERALL_EMO']]
     else:
         df_text = df_text[['TWEET_ID', 'AUTHOR_ID', 'CREATED', 'TIDY_TWEET', 'LEMM']]
     df_text['CREATED'] = df_text['CREATED'].astype('datetime64[ns]').dt.date
@@ -142,7 +139,7 @@ def load_tweets(keyword, start_date, end_date, results = 500, first_run=True):
             try:
                 if first_run == True:
                     query = (f"""
-                     INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM, OVERALL_EMO, OVERALL_EMO_SCORE)
+                     INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM, OVERALL_EMO)
                      VALUES (
                      "{row[column_list[0]]}"
                      ,"{row[column_list[1]]}"
@@ -151,7 +148,6 @@ def load_tweets(keyword, start_date, end_date, results = 500, first_run=True):
                      ,"{row[column_list[3]]}"
                      ,"{row[column_list[4]]}"
                      ,"{row[column_list[5]]}"
-                     ,"{row[column_list[6]]}"
                      );
                      """)
                 else:
@@ -170,7 +166,7 @@ def load_tweets(keyword, start_date, end_date, results = 500, first_run=True):
             except:
                 if first_run == True:
                     query = (f"""
-                     INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM, OVERALL_EMO, OVERALL_EMO_SCORE)
+                     INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM, OVERALL_EMO)
                      VALUES (
                      '{row[column_list[0]]}'
                      ,'{row[column_list[1]]}'
@@ -179,7 +175,6 @@ def load_tweets(keyword, start_date, end_date, results = 500, first_run=True):
                      ,'{row[column_list[3]]}'
                      ,'{row[column_list[4]]}'
                      ,'{row[column_list[5]]}'
-                     ,'{row[column_list[6]]}'
                      );
                      """)
                 else:
@@ -374,19 +369,17 @@ def database_load(search_term):
     query3 = """
         SELECT
         SEARCH_TERM,
-        OVERALL_EMO,
-        ROUND(AVG(OVERALL_EMO_SCORE),2) AS AVERAGE_EMO_SCORE
+        OVERALL_EMO
         FROM TWEET_TEXT
         GROUP BY SEARCH_TERM, OVERALL_EMO
         ;
         """
     df3 = pd.read_sql_query(query3, cnx)
-    df3_out = pd.pivot_table(df3, index=['OVERALL_EMO'], columns=['SEARCH_TERM'], values='AVERAGE_EMO_SCORE')
 
     writer = pd.ExcelWriter('output_data/load_process_metrics.xlsx', engine='xlsxwriter')
     df1.to_excel(writer, sheet_name='SEARCH_METRICS')
     df2.to_excel(writer, sheet_name='LOCATION_METRICS')
-    df3_out.to_excel(writer, sheet_name='SENTIMENT_METRICS')
+    df3.to_excel(writer, sheet_name='SENTIMENT_METRICS')
     writer.save()
     writer.close()
 
