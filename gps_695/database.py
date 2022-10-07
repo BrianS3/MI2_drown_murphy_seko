@@ -111,13 +111,15 @@ def load_tweets(keyword, start_date, end_date, results = 500, first_run=True):
     print("Cleaning tweets..")
     df_text = n.clean_tweets(df_text)
     print("Tweets cleaned")
-    print("Sentiment analysis starting....")
+
     if first_run == True:
+        print("Sentiment analysis starting....")
+        print("Sentiment analysis complete")
         n.analyze_tweets(df_text)
     else:
+        print("Skipping sentiment analysis...")
         df_text['OVERALL_EMO'] = ""
         df_text['OVERALL_EMO_SCORE'] = ""
-    print("Sentiment analysis complete")
     print("Beep Boop Beep Boop Boop...Processing")
     n.lemmatize(df_text)
     df_text = df_text[['TWEET_ID', 'AUTHOR_ID', 'CREATED', 'TIDY_TWEET', 'LEMM', 'OVERALL_EMO', 'OVERALL_EMO_SCORE']]
