@@ -3,7 +3,7 @@ def clean_tweets(df):
     INPUT: Pandas DataFrame 
     Removes tweets that are sent when a person posts a video or photo only;
     removes URLS, username mentions from tweet text;
-    removes non-English Tweets;
+    translates non-English Tweets;
     isolates hashtags;
     OUTPUT: original df with added columns TIDY_TWEET, HASHTAGS
     '''
@@ -12,27 +12,30 @@ def clean_tweets(df):
 
     data = df.copy()
 
+    data = data[data.TWEET_TEXT.str.contains("Just posted a")==False] # posts that are only photos/videos
+    
     hashtags = []
     tweets = []
     for tweet in data['TWEET_TEXT']:
         tweet=str(tweet)
-        hashtags.append(re.findall(r"\B#\w*[a-zA-Z]+\w*", tweet))
-        tweet = re.sub("[0-9]", " ", tweet) # digits
         tweet = tweet.lower().strip()
+        hashtags.append(re.findall(r"\B#\w*[a-zA-Z]+\w*", tweet.lower().strip())) # isolate hashtags
+        tweet = re.sub("[0-9]", " ", tweet) # digits
         tweet = re.sub("@[\w]*", " ", tweet) # usernames
         tweet = re.sub(r"https?:\/\/.*[\r\n]*", "", tweet) # URLs
         tweet = re.sub(r"[^\w'\s]+", " ", tweet) # punctuation
 
         # Detect language
         if tweet == "":
-            tweet = "Donde está el baño"
-            
+            # making empty tweets non-English so they are removed; detect won't process empty strings
+            tweet = "donde está el baño" 
         lang = detect(tweet)
+
         if lang != 'en':
             tweet=np.nan
-            
+
         tweets.append(tweet)
-        
+
     data['TIDY_TWEET'] = tweets
     data['HASHTAGS'] = hashtags
     data=data.dropna()
