@@ -340,7 +340,7 @@ def create_sentiment_model():
     file.write("Best: {0}, using {1} \n".format(grid_results.best_score_, grid_results.best_params_))
 
     gpred = grid.predict(X_test)
-    file.write(f"f1 score: {f1_score(y_test, gpred, average='micro'} \n")
+    file.write(f"f1 score: {f1_score(y_test, gpred, average='micro')} \n")
     file.write(f"accuracy: {accuracy_score(y_test, gpred)} \n")
     file.close()
 
@@ -348,28 +348,22 @@ def create_sentiment_model():
     query2 = """
     SELECT TWEET_ID, LEMM 
     FROM TWEET_TEXT
-    WHERE CREATED NOT IN (
-    	select 
-    	MAX(CREATED) AS CREATED
-    	from TWEET_TEXT
-    	GROUP BY SEARCH_TERM)
+    WHERE OVERALL_EMO IS NULL
     """
-    df2 = pd.read_sql_query(query, cnx)
+    df2 = pd.read_sql_query(query2, cnx)
     X2 = vectorizer.transform(df2['LEMM'])
 
     gpred2 = grid.predict(X2)
 
     df2['pred'] = gpred2.tolist()
+    column_list = list(df2.columns)
 
+    cnx = d.connect_to_database()
     for ind, row in df2.iterrows():
-        try:
-            query = (f"""
-                        INSERT INTO AUTHOR_LOCATION (AUTHOR_ID, STATE_ID)
-                        VALUES (
-                        "{row[column_list[0]]}"
-                        ,"{row[column_list[1]]}"
-                        );
-                        """)
-            cnx.execute(query)
-        except:
-            continue
+        query = (f"""
+                    UPDATE TWEET_TEXT
+                    SET OVERALL_EMO = '{row[column_list[2]]}'
+                    WHERE TWEET_ID = '{row[column_list[0]]}';
+                    """)
+        cnx.execute(query)
+    cnx.close()

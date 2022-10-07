@@ -390,6 +390,6 @@ def database_load(search_term):
     writer.save()
     writer.close()
 
-
-
+    print("Creating supervised model and predicting sentiments...")
+    n.create_sentiment_model()
     print("Load Process Complete")
