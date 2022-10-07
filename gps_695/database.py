@@ -323,7 +323,7 @@ def database_load(search_term):
     term_check = search_term
 
     for term in tqdm(results):
-        for i in range(1, 26):
+        for i in tqdm(range(1, 26)):
             if term != term_check:
                 first_run_param = True
                 term_check = term
