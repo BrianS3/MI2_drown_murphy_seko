@@ -286,8 +286,90 @@ def gridsearch(search_term):
 
 def create_sentiment_model():
     """
-    Function returns a supervised sentiment prediction model. This is used to decrease load times by predicting tweet sentiment vs a traditional sentiment analysis.
-    :return: optimized SVM supervised learning model
+    Function creates a supervised sentiment prediction model. This is used to decrease load times by predicting tweet sentiment vs a traditional sentiment analysis. Function pushes sentinments to current database.
+    :return: None
     """
 
-    file = open('output_data/sentiment_optimization.txt', 'w')
+    file = open('output_data/sentiment_optimization.txt', 'w+')
+
+    import pandas as pd
+    from gps_695 import credentials as c
+    from gps_695 import database as d
+    from sklearn.metrics import accuracy_score
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.model_selection import train_test_split
+    from sklearn.svm import SVC
+    from sklearn.metrics import f1_score
+    from sklearn.model_selection import GridSearchCV, KFold
+
+    c.load_env_credentials()
+    cnx = d.connect_to_database()
+
+    query = """
+    SELECT 
+    LEMM
+    ,OVERALL_EMO
+    FROM TWEET_TEXT T
+    JOIN (
+    	select 
+    	MAX(CREATED) AS FIRST_RUN,
+    	SEARCH_TERM
+    	from TWEET_TEXT
+    	GROUP BY SEARCH_TERM
+        ) IT ON T.CREATED = IT.FIRST_RUN AND T.SEARCH_TERM = IT.SEARCH_TERM
+    """
+    df = pd.read_sql_query(query, cnx)
+
+    vectorizer = TfidfVectorizer(max_df=0.5, min_df=2, use_idf=True)
+    X = vectorizer.fit_transform(df['LEMM'])
+    y = df['OVERALL_EMO']
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True)
+
+    svm = SVC(kernel='rbf', gamma=5)
+
+    kernel = ['linear', 'sigmoid', 'rbf']
+    C = [0, 1, 2, 3, 5, 10]
+    gamma = [0.01, 0.05, .1, 0.5, 1, 5, 10]
+
+    param_grid = dict(kernel=kernel,C=C,gamma=gamma)
+
+    grid = GridSearchCV(estimator=svm, param_grid=param_grid,cv=KFold(), verbose=10)
+
+    grid_results = grid.fit(X_train, y_train)
+    file.write("Best: {0}, using {1} \n".format(grid_results.best_score_, grid_results.best_params_))
+
+    gpred = grid.predict(X_test)
+    file.write(f"f1 score: {f1_score(y_test, gpred, average='micro'} \n")
+    file.write(f"accuracy: {accuracy_score(y_test, gpred)} \n")
+    file.close()
+
+    cnx = d.connect_to_database()
+    query2 = """
+    SELECT TWEET_ID, LEMM 
+    FROM TWEET_TEXT
+    WHERE CREATED NOT IN (
+    	select 
+    	MAX(CREATED) AS CREATED
+    	from TWEET_TEXT
+    	GROUP BY SEARCH_TERM)
+    """
+    df2 = pd.read_sql_query(query, cnx)
+    X2 = vectorizer.transform(df2['LEMM'])
+
+    gpred2 = grid.predict(X2)
+
+    df2['pred'] = gpred2.tolist()
+
+    for ind, row in df2.iterrows():
+        try:
+            query = (f"""
+                        INSERT INTO AUTHOR_LOCATION (AUTHOR_ID, STATE_ID)
+                        VALUES (
+                        "{row[column_list[0]]}"
+                        ,"{row[column_list[1]]}"
+                        );
+                        """)
+            cnx.execute(query)
+        except:
+            continue

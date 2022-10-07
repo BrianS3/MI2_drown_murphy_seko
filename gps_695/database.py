@@ -390,4 +390,6 @@ def database_load(search_term):
     writer.save()
     writer.close()
 
+
+
     print("Load Process Complete")
