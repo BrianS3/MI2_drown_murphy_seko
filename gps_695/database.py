@@ -315,7 +315,7 @@ def database_load(search_term):
 
     print(f'Resetting database new search: "{search_term}" on {(dt.datetime.now()+dt.timedelta(days=-1)).strftime("%Y-%m-%d")}')
     d.reset_mysql_database()
-    d.load_tweets(search_term, (dt.datetime.now()+dt.timedelta(days=-1)).strftime("%Y-%m-%d"), dt.datetime.now().strftime("%Y-%m-%d"), 50)
+    d.load_tweets(search_term, (dt.datetime.now()+dt.timedelta(days=-1)).strftime("%Y-%m-%d"), dt.datetime.now().strftime("%Y-%m-%d"), 500)
     print("Evaluating associated terms...")
     results = n.gridsearch(search_term)
     results.insert(0,search_term)
@@ -334,7 +334,7 @@ def database_load(search_term):
             end_date = dt.datetime.now()+dt.timedelta(days=-i)
             end_date = end_date.strftime('%Y-%m-%d')
             try:
-                d.load_tweets(term, start_date, end_date, 50, first_run=first_run_param)
+                d.load_tweets(term, start_date, end_date, 500, first_run=first_run_param)
             except:
                 print(f"There were no tweets for {term} on {start_date}")
 
