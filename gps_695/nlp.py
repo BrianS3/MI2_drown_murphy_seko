@@ -139,7 +139,7 @@ def analyze_tweets(df):
     df['OVERALL_EMO'] = predominant_emotion
     df['OVERALL_EMO_SCORE'] = pred_emo_score
 
-def get_associated_keywords(df, search_term, returned_items=3, perc_in_words=0.1, **kwargs):
+def get_associated_keywords(df, search_term, perc_in_words=0.1, **kwargs):
     '''
     Function finds the associated keywords from the initial data load
     :param df: df with LEMM column
@@ -175,7 +175,8 @@ def get_associated_keywords(df, search_term, returned_items=3, perc_in_words=0.1
             for word in associated_keywords:
                 if search_term in word:
                     associated_keywords.remove(word)
-        return associated_keywords[:returned_items]
+                    print("")
+        return associated_keywords[:3]
 
     except ValueError:
         return "Could not find associated topics."
