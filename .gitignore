@@ -1,3 +1,4 @@
 .env
 scratch.py
 output_data/
+.idea/
