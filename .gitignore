@@ -3,3 +3,7 @@ scratch.py
 output_data/
 .idea
 *.pyc
+gps_695/__pycache__/nlp.cpython-39.pyc
+gps_695/__pycache__/database.cpython-39.pyc
+gps_695/__pycache__/credentials.cpython-39.pyc
+gps_695/__pycache__/__init__.cpython-39.pyc

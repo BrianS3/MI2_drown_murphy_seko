@@ -87,7 +87,7 @@ def call_tweets(keyword, start_date, end_date, results):
     print("Successful tweet extraction")
     return response
 
-def load_tweets(keyword, start_date, end_date, results = 500):
+def load_tweets(keyword, start_date, end_date, results = 500, first_run=True):
     """Pulls tweets from research project API v2
     :param keyword: keyword of tweet for API query
     :param start_date: start date of query, YYYY-MM-DD format, string
@@ -112,7 +112,11 @@ def load_tweets(keyword, start_date, end_date, results = 500):
     df_text = n.clean_tweets(df_text)
     print("Tweets cleaned")
     print("Sentiment analysis starting....")
-    n.analyze_tweets(df_text)
+    if first_run == True:
+        n.analyze_tweets(df_text)
+    else:
+        df_text['OVERALL_EMO'] = ""
+        df_text['OVERALL_EMO_SCORE'] = ""
     print("Sentiment analysis complete")
     print("Beep Boop Beep Boop Boop...Processing")
     n.lemmatize(df_text)
@@ -287,14 +291,21 @@ def database_load(search_term):
     results = n.gridsearch(search_term)
     results.append(search_term)
 
+    term_check = ""
+
     for term in tqdm(results):
+        if term != term_check:
+            first_run_param = True
+            term_check = term
+        else:
+            first_run_param = False
         for i in range(1, 26):
             start_date = dt.datetime.now()+dt.timedelta(days=-i-1)
             start_date = start_date.strftime('%Y-%m-%d')
             end_date = dt.datetime.now()+dt.timedelta(days=-i)
             end_date = end_date.strftime('%Y-%m-%d')
             try:
-                d.load_tweets(term, start_date, end_date, 500)
+                d.load_tweets(term, start_date, end_date, 500, first_run=first_run_param)
             except:
                 print(f"There were no tweets for {term} on {start_date}")
 

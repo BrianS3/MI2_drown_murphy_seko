@@ -247,14 +247,14 @@ def gridsearch(search_term):
         columns=['alpha', 'l1_ratio', 'percents'])
 
     grid_search_results = pd.DataFrame()
-    file = open('output_data/grid_search.txt', 'w')
+    file = open('output_data/word_association_eval.txt', 'w')
 
     for ind, row in param_df.iterrows():
         alpha_val = row['alpha']
         l1_val = row['l1_ratio']
         perc_val = row['percents']
 
-        file = open('output_data/grid_search.txt', 'a')
+        file = open('output_data/word_association_eval.txt', 'a')
         file.write(f"{ind} -- alpha:{alpha_val}  l1_ratio:{l1_val} perc in words:{perc_val} \n")
 
         kw_list = n.get_associated_keywords(df, search_term, perc_in_words=perc_val.astype(float),
@@ -276,8 +276,16 @@ def gridsearch(search_term):
                     continue
 
     grid_search_results = grid_search_results.drop_duplicates()
-    grid_search_results.to_csv('output_data/grid_search.csv')
+    grid_search_results.to_csv('output_data/word_association_results.csv')
     grid_search_results = grid_search_results.sort_values('mse')
     associated_words = list(grid_search_results['term'].iloc[:2])
 
     return associated_words
+
+def create_sentiment_model():
+    """
+    Function returns a supervised sentiment prediction model. This is used to decrease load times by predicting tweet sentiment vs a traditional sentiment analysis.
+    :return: optimized SVM supervised learning model
+    """
+
+    file = open('output_data/sentiment_optimization.txt', 'w')
