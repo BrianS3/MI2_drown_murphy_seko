@@ -23,14 +23,14 @@ def clean_tweets(df):
         hashtags.append(re.findall(r"\B#\w*[a-zA-Z]+\w*", tweet.lower().strip())) # isolate hashtags
         tweet = re.sub("[0-9]", " ", tweet) # digits
         tweet = re.sub("@[\w]*", " ", tweet) # usernames
-        tweet = re.sub(r"https?:\/\/.*[\r\n]*", "", tweet) # URLs
+        tweet = re.sub(r"https?:\/\/.*[\r\n]*", " ", tweet) # URLs
         tweet = re.sub(r"[^\w'\s]+", " ", tweet) # punctuation
 
         # Detect language
-        if tweet == "":
+        if tweet.strip() == "":
             # making empty tweets non-English so they are removed; detect won't process empty strings
             tweet = "donde está el baño" 
-        lang = detect(tweet)
+        lang = detect(tweet.strip())
 
         if lang != 'en':
             tweet=np.nan
