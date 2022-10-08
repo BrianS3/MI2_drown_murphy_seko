@@ -1,6 +1,6 @@
 def clean_tweets(df):
     '''
-    INPUT: Pandas DataFrame 
+    INPUT: Pandas DataFrame
     Removes tweets that are sent when a person posts a video or photo only;
     removes URLS, username mentions from tweet text;
     translates non-English Tweets;
@@ -14,7 +14,7 @@ def clean_tweets(df):
     data = df.copy()
 
     data = data[data.TWEET_TEXT.str.contains("Just posted a")==False] # posts that are only photos/videos
-    
+
     hashtags = []
     tweets = []
     for tweet in data['TWEET_TEXT']:
@@ -25,11 +25,12 @@ def clean_tweets(df):
         tweet = re.sub("@[\w]*", " ", tweet) # usernames
         tweet = re.sub(r"https?:\/\/.*[\r\n]*", " ", tweet) # URLs
         tweet = re.sub(r"[^\w'\s]+", " ", tweet) # punctuation
+        tweet = tweet.replace("rt    ", "")
 
         # Detect language
         if tweet.strip() == "":
             # making empty tweets non-English so they are removed; detect won't process empty strings
-            tweet = "donde está el baño" 
+            tweet = "donde está el baño"
         lang = detect(tweet.strip())
 
         if lang != 'en':
@@ -65,7 +66,7 @@ def lemmatize(df):
 
     # remove stopwords
     from nltk.corpus import stopwords
-    
+
     stop_words = set(stopwords.words('english'))
     new_tokens = []
     for item in tokens:
@@ -125,7 +126,7 @@ def analyze_tweets(df):
 
         predominant_emotion.append(emos)
         pred_emo_score.append(emo_scores) ##
-        
+
     for i, item in enumerate(predominant_emotion):
         if len(item)>1:
             predominant_emotion[i] = ['Mixed']
@@ -302,10 +303,10 @@ def create_sentiment_model():
     cnx = d.connect_to_database()
 
     query = """
-    SELECT 
+    SELECT
     LEMM
     ,OVERALL_EMO
-    FROM TWEET_TEXT 
+    FROM TWEET_TEXT
     WHERE OVERALL_EMO IS NOT NULL
     """
     df = pd.read_sql_query(query, cnx)
@@ -336,7 +337,7 @@ def create_sentiment_model():
 
     cnx = d.connect_to_database()
     query2 = """
-    SELECT TWEET_ID, LEMM 
+    SELECT TWEET_ID, LEMM
     FROM TWEET_TEXT
     WHERE OVERALL_EMO IS NULL
     """
