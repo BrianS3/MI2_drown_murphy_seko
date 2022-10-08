@@ -83,7 +83,11 @@ def lemmatize(df):
         for word in item:
             lemm = lemmatizer.lemmatize(word.lower())
             l.append(lemm)
-        lemms.append(l)
+        if l != 'rt':
+            lemms.append(l)
+            
+    for lemm_list in lemms:
+        lemm_list = [item for item in lemm_list if item != 'rt']
 
     df['LEMM'] = lemms
 
@@ -163,7 +167,7 @@ def get_associated_keywords(df, search_term, perc_in_words=0.1, **kwargs):
     # term must appear in 10% of tweets, looking for bigrams
     try:
         X = vect.fit_transform(df2.LEMM)
-        model = NMF(**kwargs, max_iter=1000)  # , random_state=42)
+        model = NMF(**kwargs, max_iter=1000, random_state=42)  # , random_state=42)
         model.fit(X)
         components_df = pd.DataFrame(model.components_, columns=vect.get_feature_names_out())
         for topic in range(components_df.shape[0]):
