@@ -27,10 +27,10 @@ def clean_tweets(df):
         tweet = re.sub(r"[^\w'\s]+", " ", tweet) # punctuation
 
         # Detect language
-        if tweet == "":
+        if tweet.strip() == "":
             # making empty tweets non-English so they are removed; detect won't process empty strings
-            tweet = "donde está el baño" 
-        lang = detect(tweet)
+            tweet = "donde está el baño"
+        lang = detect(tweet.strip())
 
         if lang != 'en':
             tweet=np.nan
