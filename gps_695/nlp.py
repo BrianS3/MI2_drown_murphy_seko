@@ -25,6 +25,7 @@ def clean_tweets(df):
         tweet = re.sub("@[\w]*", " ", tweet) # usernames
         tweet = re.sub(r"https?:\/\/.*[\r\n]*", "", tweet) # URLs
         tweet = re.sub(r"[^\w'\s]+", " ", tweet) # punctuation
+        tweet = tweet.replace("rt    ", "")
 
         # Detect language
         if tweet.strip() == "":
