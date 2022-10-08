@@ -85,6 +85,9 @@ def lemmatize(df):
             l.append(lemm)
         if l != 'rt':
             lemms.append(l)
+            
+    for lemm_list in lemms:
+        lemm_list = [item for item in lemm_list if item != 'rt']
 
     df['LEMM'] = lemms
 
