@@ -9,6 +9,7 @@ def clean_tweets(df):
     '''
     import re
     from langdetect import detect
+    import numpy as np
 
     data = df.copy()
 
