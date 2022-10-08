@@ -338,6 +338,9 @@ def database_load(search_term):
             except:
                 print(f"There were no tweets for {term} on {start_date}")
 
+    print("Creating supervised model and predicting sentiments...")
+    n.create_sentiment_model()
+
     cnx = d.connect_to_database()
     query1 = f"""
     SELECT
@@ -383,6 +386,4 @@ def database_load(search_term):
     writer.save()
     writer.close()
 
-    print("Creating supervised model and predicting sentiments...")
-    n.create_sentiment_model()
     print("Load Process Complete")

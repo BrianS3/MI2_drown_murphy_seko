@@ -309,14 +309,8 @@ def create_sentiment_model():
     SELECT 
     LEMM
     ,OVERALL_EMO
-    FROM TWEET_TEXT T
-    JOIN (
-    	select 
-    	MAX(CREATED) AS FIRST_RUN,
-    	SEARCH_TERM
-    	from TWEET_TEXT
-    	GROUP BY SEARCH_TERM
-        ) IT ON T.CREATED = IT.FIRST_RUN AND T.SEARCH_TERM = IT.SEARCH_TERM
+    FROM TWEET_TEXT 
+    WHERE OVERALL_EMO IS NOT NULL
     """
     df = pd.read_sql_query(query, cnx)
 
