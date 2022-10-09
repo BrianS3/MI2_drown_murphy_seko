@@ -101,6 +101,7 @@ def analyze_tweets():
     import text2emotion as te
     from gps_695 import database as d
     import pandas as pd
+    import tqdm
 
     cnx = d.connect_to_database()
     get_tweets_query = 'SELECT TWEET_ID, TIDY_TWEET FROM TWEET_TEXT'
@@ -116,7 +117,7 @@ def analyze_tweets():
 
     predominant_emotion = []
     pred_emo_score = [] ##
-    for item in df['TWEET_EMO']:
+    for item in tqdm(df['TWEET_EMO']):
         sort_by_score_lambda = lambda score: score[1]
         sorted_value_key_pairs = sorted(item.items(), key=sort_by_score_lambda, reverse=True)
 
@@ -149,7 +150,7 @@ def analyze_tweets():
     column_list = list(df.columns)
 
     cnx = d.connect_to_database()
-    for ind, row in df.iterrows():
+    for ind, row in tqdm(df.iterrows()):
         query = (f"""
                     UPDATE TWEET_TEXT
                     SET OVERALL_EMO = '{row[column_list[1]]}'
@@ -320,6 +321,7 @@ def create_sentiment_model():
     from sklearn.svm import SVC
     from sklearn.metrics import f1_score
     from sklearn.model_selection import GridSearchCV, KFold
+    import tqdm
 
     c.load_env_credentials()
     cnx = d.connect_to_database()
@@ -372,7 +374,7 @@ def create_sentiment_model():
     column_list = list(df2.columns)
 
     cnx = d.connect_to_database()
-    for ind, row in df2.iterrows():
+    for ind, row in tqdm(df2.iterrows()):
         query = (f"""
                     UPDATE TWEET_TEXT
                     SET OVERALL_EMO = '{row[column_list[2]]}'
