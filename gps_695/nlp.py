@@ -101,7 +101,7 @@ def analyze_tweets():
     import text2emotion as te
     from gps_695 import database as d
     import pandas as pd
-    import tqdm
+    from tqdm import tqdm
 
     cnx = d.connect_to_database()
     get_tweets_query = 'SELECT TWEET_ID, TIDY_TWEET FROM TWEET_TEXT'
@@ -321,7 +321,7 @@ def create_sentiment_model():
     from sklearn.svm import SVC
     from sklearn.metrics import f1_score
     from sklearn.model_selection import GridSearchCV, KFold
-    import tqdm
+    from tqdm import tqdm
 
     c.load_env_credentials()
     cnx = d.connect_to_database()
@@ -344,8 +344,8 @@ def create_sentiment_model():
     svm = SVC(kernel='rbf', gamma=5)
 
     kernel = ['linear', 'sigmoid', 'rbf']
-    C = [0, 1, 2, 3, 5, 10]
-    gamma = [0.01, 0.05, .1, 0.5, 1, 5, 10]
+    C = [0, 1, 2, 3, 5, 10, 15, 20]
+    gamma = [0.01, 0.05, .1, 0.5, 1, 5, 10, 15, 20]
 
     param_grid = dict(kernel=kernel,C=C,gamma=gamma)
 
