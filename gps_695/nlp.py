@@ -344,8 +344,8 @@ def create_sentiment_model():
     svm = SVC(kernel='rbf', gamma=5)
 
     kernel = ['linear', 'sigmoid', 'rbf']
-    C = [0, 1, 2, 3, 5, 10, 15, 20]
-    gamma = [0.01, 0.05, .1, 0.5, 1, 5, 10, 15, 20]
+    C = [0, 1, 2, 3, 5 , 10]
+    gamma = [0.01, 0.05, .1, 0.5, 1, 5, 10]
 
     param_grid = dict(kernel=kernel,C=C,gamma=gamma)
 
