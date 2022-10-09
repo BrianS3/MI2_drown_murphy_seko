@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def connect_to_database():
     """
     Creates connection to mysql database.
@@ -87,7 +90,7 @@ def call_tweets(keyword, start_date, end_date, results):
     print("Successful tweet extraction")
     return response
 
-def load_tweets(keyword, start_date, end_date, results = 500):
+def load_tweets(keyword, start_date, end_date, results = 500, first_run=True):
     """Pulls tweets from research project API v2
     :param keyword: keyword of tweet for API query
     :param start_date: start date of query, YYYY-MM-DD format, string
@@ -111,14 +114,10 @@ def load_tweets(keyword, start_date, end_date, results = 500):
     print("Cleaning tweets..")
     df_text = n.clean_tweets(df_text)
     print("Tweets cleaned")
-    print("Sentiment analysis starting....")
-    n.analyze_tweets(df_text)
-    print("Sentiment analysis complete")
-    print("Beep Boop Beep Boop Boop...Processing")
+
     n.lemmatize(df_text)
-    df_text = df_text[['TWEET_ID', 'AUTHOR_ID', 'CREATED', 'TIDY_TWEET', 'LEMM', 'OVERALL_EMO', 'OVERALL_EMO_SCORE']]
+    df_text = df_text[['TWEET_ID', 'AUTHOR_ID', 'CREATED', 'TIDY_TWEET', 'LEMM']]
     df_text['CREATED'] = df_text['CREATED'].astype('datetime64[ns]').dt.date
-    df_text['OVERALL_EMO_SCORE'] = round(df_text['OVERALL_EMO_SCORE'], 2)
     df_text['TIDY_TWEET'] = [re.sub("[']", "", item) for item in df_text['TIDY_TWEET']]
     column_list = list(df_text.columns)
 
@@ -129,31 +128,27 @@ def load_tweets(keyword, start_date, end_date, results = 500):
         try:
             try:
                 query = (f"""
-                 INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM, OVERALL_EMO, OVERALL_EMO_SCORE)
-                 VALUES (
-                 "{row[column_list[0]]}"
-                 ,"{row[column_list[1]]}"
-                 ,"{row[column_list[2]]}"
-                 ,"{keyword}"
-                 ,"{row[column_list[3]]}"
-                 ,"{row[column_list[4]]}"
-                 ,"{row[column_list[5]]}"
-                 ,"{row[column_list[6]]}"
-                 );
-                 """)
+                INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM)
+                VALUES (
+                "{row[column_list[0]]}"
+                ,"{row[column_list[1]]}"
+                ,"{row[column_list[2]]}"
+                ,"{keyword}"
+                ,"{row[column_list[3]]}"
+                ,"{row[column_list[4]]}"
+                );
+                """)
                 cnx.execute(query)
             except:
                 query = (f"""
-                 INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM, OVERALL_EMO, OVERALL_EMO_SCORE)
+                 INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM)
                  VALUES (
                  '{row[column_list[0]]}'
                  ,'{row[column_list[1]]}'
                  ,'{row[column_list[2]]}'
-                 ,'{keyword}
+                 ,'{keyword}'
                  ,'{row[column_list[3]]}'
                  ,'{row[column_list[4]]}'
-                 ,'{row[column_list[5]]}'
-                 ,'{row[column_list[6]]}'
                  );
                  """)
                 cnx.execute(query)
@@ -285,10 +280,10 @@ def database_load(search_term):
     d.load_tweets(search_term, (dt.datetime.now()+dt.timedelta(days=-1)).strftime("%Y-%m-%d"), dt.datetime.now().strftime("%Y-%m-%d"), 500)
     print("Evaluating associated terms...")
     results = n.gridsearch(search_term)
-    results.append(search_term)
+    results.insert(0,search_term)
 
     for term in tqdm(results):
-        for i in range(1, 26):
+        for i in tqdm(range(1, 26)):
             start_date = dt.datetime.now()+dt.timedelta(days=-i-1)
             start_date = start_date.strftime('%Y-%m-%d')
             end_date = dt.datetime.now()+dt.timedelta(days=-i)
@@ -297,6 +292,14 @@ def database_load(search_term):
                 d.load_tweets(term, start_date, end_date, 500)
             except:
                 print(f"There were no tweets for {term} on {start_date}")
+
+    print('Performing sentiment analysis...')
+    print('zip whizz beep bip zip zam')
+
+    n.analyze_tweets()
+
+    print("Creating supervised model and predicting sentiments...")
+    n.create_sentiment_model()
 
     cnx = d.connect_to_database()
     query1 = f"""
@@ -329,19 +332,17 @@ def database_load(search_term):
     query3 = """
         SELECT
         SEARCH_TERM,
-        OVERALL_EMO,
-        ROUND(AVG(OVERALL_EMO_SCORE),2) AS AVERAGE_EMO_SCORE
+        OVERALL_EMO
         FROM TWEET_TEXT
         GROUP BY SEARCH_TERM, OVERALL_EMO
         ;
         """
     df3 = pd.read_sql_query(query3, cnx)
-    df3_out = pd.pivot_table(df3, index=['OVERALL_EMO'], columns=['SEARCH_TERM'], values='AVERAGE_EMO_SCORE')
 
     writer = pd.ExcelWriter('output_data/load_process_metrics.xlsx', engine='xlsxwriter')
     df1.to_excel(writer, sheet_name='SEARCH_METRICS')
     df2.to_excel(writer, sheet_name='LOCATION_METRICS')
-    df3_out.to_excel(writer, sheet_name='SENTIMENT_METRICS')
+    df3.to_excel(writer, sheet_name='SENTIMENT_METRICS')
     writer.save()
     writer.close()
 

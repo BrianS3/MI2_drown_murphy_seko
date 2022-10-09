@@ -1,6 +1,6 @@
 def clean_tweets(df):
     '''
-    INPUT: Pandas DataFrame 
+    INPUT: Pandas DataFrame
     Removes tweets that are sent when a person posts a video or photo only;
     removes URLS, username mentions from tweet text;
     translates non-English Tweets;
@@ -14,7 +14,7 @@ def clean_tweets(df):
     data = df.copy()
 
     data = data[data.TWEET_TEXT.str.contains("Just posted a")==False] # posts that are only photos/videos
-    
+
     hashtags = []
     tweets = []
     for tweet in data['TWEET_TEXT']:
@@ -23,7 +23,7 @@ def clean_tweets(df):
         hashtags.append(re.findall(r"\B#\w*[a-zA-Z]+\w*", tweet.lower().strip())) # isolate hashtags
         tweet = re.sub("[0-9]", " ", tweet) # digits
         tweet = re.sub("@[\w]*", " ", tweet) # usernames
-        tweet = re.sub(r"https?:\/\/.*[\r\n]*", "", tweet) # URLs
+        tweet = re.sub(r"https?:\/\/.*[\r\n]*", " ", tweet) # URLs
         tweet = re.sub(r"[^\w'\s]+", " ", tweet) # punctuation
         tweet = tweet.replace("rt    ", "")
 
@@ -66,7 +66,7 @@ def lemmatize(df):
 
     # remove stopwords
     from nltk.corpus import stopwords
-    
+
     stop_words = set(stopwords.words('english'))
     new_tokens = []
     for item in tokens:
@@ -92,15 +92,21 @@ def lemmatize(df):
     df['LEMM'] = lemms
 
 
-def analyze_tweets(df):
+def analyze_tweets():
     '''
     Analyzes tweets for sentiment analysis
     Get emotions: Happy, Angry, Surprise, Sad, Fear, *Neutral, *Mixed
-    *determined by top emotions(highest=0: neutral; highest>1: mixed
-    :param df: Pandas DataFrame with TIDY_TWEET column
-    :return: df with columns TWEET_ID, OVERALL_EMO
+    :return: None, database loaded with data
     '''
     import text2emotion as te
+    from gps_695 import database as d
+    import pandas as pd
+    from tqdm import tqdm
+
+    cnx = d.connect_to_database()
+    get_tweets_query = 'SELECT TWEET_ID, TIDY_TWEET FROM TWEET_TEXT'
+    df_full = pd.read_sql_query(get_tweets_query, cnx)
+    df = df_full.sample(round(len(df_full)*.2))
 
     # get emotion scores and predominant tweet emotion(s)
     emos = []
@@ -111,7 +117,7 @@ def analyze_tweets(df):
 
     predominant_emotion = []
     pred_emo_score = [] ##
-    for item in df['TWEET_EMO']:
+    for item in tqdm(df['TWEET_EMO']):
         sort_by_score_lambda = lambda score: score[1]
         sorted_value_key_pairs = sorted(item.items(), key=sort_by_score_lambda, reverse=True)
 
@@ -130,7 +136,7 @@ def analyze_tweets(df):
 
         predominant_emotion.append(emos)
         pred_emo_score.append(emo_scores) ##
-        
+
     for i, item in enumerate(predominant_emotion):
         if len(item)>1:
             predominant_emotion[i] = ['Mixed']
@@ -139,8 +145,21 @@ def analyze_tweets(df):
     pred_emo_score = [element for sublist in pred_emo_score for element in sublist] ##
     df['OVERALL_EMO'] = predominant_emotion
     df['OVERALL_EMO_SCORE'] = pred_emo_score
+    df = df[['TWEET_ID', 'OVERALL_EMO']]
 
-def get_associated_keywords(df, search_term, returned_items=3, perc_in_words=0.1, **kwargs):
+    column_list = list(df.columns)
+
+    cnx = d.connect_to_database()
+    for ind, row in tqdm(df.iterrows()):
+        query = (f"""
+                    UPDATE TWEET_TEXT
+                    SET OVERALL_EMO = '{row[column_list[1]]}'
+                    WHERE TWEET_ID = '{row[column_list[0]]}';
+                    """)
+        cnx.execute(query)
+    cnx.close()
+
+def get_associated_keywords(df, search_term, perc_in_words=0.1, **kwargs):
     '''
     Function finds the associated keywords from the initial data load
     :param df: df with LEMM column
@@ -176,7 +195,8 @@ def get_associated_keywords(df, search_term, returned_items=3, perc_in_words=0.1
             for word in associated_keywords:
                 if search_term in word:
                     associated_keywords.remove(word)
-        return associated_keywords[:returned_items]
+                    print("")
+        return associated_keywords[:3]
 
     except ValueError:
         return "Could not find associated topics."
@@ -194,6 +214,7 @@ def evaluate_keywords(search_term, keyword_list):
 
     kw = keyword_list
     kw.insert(0, search_term)
+
 
     def check_trend(kw_list):
         """
@@ -248,14 +269,14 @@ def gridsearch(search_term):
         columns=['alpha', 'l1_ratio', 'percents'])
 
     grid_search_results = pd.DataFrame()
-    file = open('output_data/grid_search.txt', 'w')
+    file = open('output_data/word_association_eval.txt', 'w')
 
     for ind, row in param_df.iterrows():
         alpha_val = row['alpha']
         l1_val = row['l1_ratio']
         perc_val = row['percents']
 
-        file = open('output_data/grid_search.txt', 'a')
+        file = open('output_data/word_association_eval.txt', 'a')
         file.write(f"{ind} -- alpha:{alpha_val}  l1_ratio:{l1_val} perc in words:{perc_val} \n")
 
         kw_list = n.get_associated_keywords(df, search_term, perc_in_words=perc_val.astype(float),
@@ -277,8 +298,87 @@ def gridsearch(search_term):
                     continue
 
     grid_search_results = grid_search_results.drop_duplicates()
-    grid_search_results.to_csv('output_data/grid_search.csv')
+    grid_search_results.to_csv('output_data/word_association_results.csv')
     grid_search_results = grid_search_results.sort_values('mse')
     associated_words = list(grid_search_results['term'].iloc[:2])
 
     return associated_words
+
+def create_sentiment_model():
+    """
+    Function creates a supervised sentiment prediction model. This is used to decrease load times by predicting tweet sentiment vs a traditional sentiment analysis. Function pushes sentinments to current database.
+    :return: None
+    """
+
+    file = open('output_data/sentiment_optimization.txt', 'w+')
+
+    import pandas as pd
+    from gps_695 import credentials as c
+    from gps_695 import database as d
+    from sklearn.metrics import accuracy_score
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.model_selection import train_test_split
+    from sklearn.svm import SVC
+    from sklearn.metrics import f1_score
+    from sklearn.model_selection import GridSearchCV, KFold
+    from tqdm import tqdm
+
+    c.load_env_credentials()
+    cnx = d.connect_to_database()
+
+    query = """
+    SELECT
+    LEMM
+    ,OVERALL_EMO
+    FROM TWEET_TEXT
+    WHERE OVERALL_EMO IS NOT NULL
+    """
+    df = pd.read_sql_query(query, cnx)
+
+    vectorizer = TfidfVectorizer(max_df=0.5, min_df=2, use_idf=True)
+    X = vectorizer.fit_transform(df['LEMM'])
+    y = df['OVERALL_EMO']
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True)
+
+    svm = SVC(kernel='rbf', gamma=5)
+
+    kernel = ['linear', 'sigmoid', 'rbf']
+    C = [0, 1, 2, 3, 5 , 10]
+    gamma = [0.01, 0.05, .1, 0.5, 1, 5, 10]
+
+    param_grid = dict(kernel=kernel,C=C,gamma=gamma)
+
+    grid = GridSearchCV(estimator=svm, param_grid=param_grid,cv=KFold(), verbose=10)
+
+    grid_results = grid.fit(X_train, y_train)
+    file.write("Best: {0}, using {1} \n".format(grid_results.best_score_, grid_results.best_params_))
+
+    gpred = grid.predict(X_test)
+    file.write(f"f1 score: {f1_score(y_test, gpred, average='micro')} \n")
+    file.write(f"accuracy: {accuracy_score(y_test, gpred)} \n")
+    file.close()
+
+    cnx = d.connect_to_database()
+    query2 = """
+    SELECT TWEET_ID, LEMM
+    FROM TWEET_TEXT
+    WHERE OVERALL_EMO IS NULL
+    """
+    df2 = pd.read_sql_query(query2, cnx)
+    X2 = vectorizer.transform(df2['LEMM'])
+
+    gpred2 = grid.predict(X2)
+
+    df2['pred'] = gpred2.tolist()
+    column_list = list(df2.columns)
+
+    cnx = d.connect_to_database()
+    for ind, row in tqdm(df2.iterrows()):
+        query = (f"""
+                    UPDATE TWEET_TEXT
+                    SET OVERALL_EMO = '{row[column_list[2]]}'
+                    WHERE TWEET_ID = '{row[column_list[0]]}';
+                    """)
+        cnx.execute(query)
+    cnx.close()
