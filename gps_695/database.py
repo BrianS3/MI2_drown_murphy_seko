@@ -293,6 +293,11 @@ def database_load(search_term):
             except:
                 print(f"There were no tweets for {term} on {start_date}")
 
+    print('Performing sentiment analysis...')
+    print('zip whizz beep bip zip zam')
+
+    n.analyze_tweets()
+
     print("Creating supervised model and predicting sentiments...")
     n.create_sentiment_model()
 

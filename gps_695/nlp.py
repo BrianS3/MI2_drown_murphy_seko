@@ -92,15 +92,20 @@ def lemmatize(df):
     df['LEMM'] = lemms
 
 
-def analyze_tweets(df):
+def analyze_tweets():
     '''
     Analyzes tweets for sentiment analysis
     Get emotions: Happy, Angry, Surprise, Sad, Fear, *Neutral, *Mixed
-    *determined by top emotions(highest=0: neutral; highest>1: mixed
-    :param df: Pandas DataFrame with TIDY_TWEET column
-    :return: df with columns TWEET_ID, OVERALL_EMO
+    :return: None, database loaded with data
     '''
     import text2emotion as te
+    from gps_695 import database as d
+    import pandas as pd
+
+    cnx = d.connect_to_database()
+    get_tweets_query = 'SELECT TWEET_ID, TIDY_TWEET FROM TWEET_TEXT'
+    df_full = pd.read_sql_query(get_tweets_query, cnx)
+    df = df_full.sample(round(len(df_full)*.2))
 
     # get emotion scores and predominant tweet emotion(s)
     emos = []
@@ -139,6 +144,19 @@ def analyze_tweets(df):
     pred_emo_score = [element for sublist in pred_emo_score for element in sublist] ##
     df['OVERALL_EMO'] = predominant_emotion
     df['OVERALL_EMO_SCORE'] = pred_emo_score
+    df = df[['TWEET_ID', 'OVERALL_EMO']]
+
+    column_list = list(df.columns)
+
+    cnx = d.connect_to_database()
+    for ind, row in df.iterrows():
+        query = (f"""
+                    UPDATE TWEET_TEXT
+                    SET OVERALL_EMO = '{row[column_list[1]]}'
+                    WHERE TWEET_ID = '{row[column_list[0]]}';
+                    """)
+        cnx.execute(query)
+    cnx.close()
 
 def get_associated_keywords(df, search_term, perc_in_words=0.1, **kwargs):
     '''
@@ -177,7 +195,7 @@ def get_associated_keywords(df, search_term, perc_in_words=0.1, **kwargs):
                 if search_term in word:
                     associated_keywords.remove(word)
                     print("")
-        return associated_keywords[:2]
+        return associated_keywords[:3]
 
     except ValueError:
         return "Could not find associated topics."
