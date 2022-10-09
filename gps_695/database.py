@@ -115,18 +115,8 @@ def load_tweets(keyword, start_date, end_date, results = 500, first_run=True):
     df_text = n.clean_tweets(df_text)
     print("Tweets cleaned")
 
-    if first_run == True:
-        print("Sentiment analysis starting....")
-        n.analyze_tweets(df_text)
-        print("Sentiment analysis complete")
-    else:
-        print("Skipping sentiment analysis...")
-    print("Beep Boop Beep Boop Boop...Processing")
     n.lemmatize(df_text)
-    if first_run == True:
-        df_text = df_text[['TWEET_ID', 'AUTHOR_ID', 'CREATED', 'TIDY_TWEET', 'LEMM', 'OVERALL_EMO']]
-    else:
-        df_text = df_text[['TWEET_ID', 'AUTHOR_ID', 'CREATED', 'TIDY_TWEET', 'LEMM']]
+    df_text = df_text[['TWEET_ID', 'AUTHOR_ID', 'CREATED', 'TIDY_TWEET', 'LEMM']]
     df_text['CREATED'] = df_text['CREATED'].astype('datetime64[ns]').dt.date
     df_text['TIDY_TWEET'] = [re.sub("[']", "", item) for item in df_text['TIDY_TWEET']]
     column_list = list(df_text.columns)
@@ -137,58 +127,30 @@ def load_tweets(keyword, start_date, end_date, results = 500, first_run=True):
     for ind, row in df_text.iterrows():
         try:
             try:
-                if first_run == True:
-                    query = (f"""
-                     INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM, OVERALL_EMO)
-                     VALUES (
-                     "{row[column_list[0]]}"
-                     ,"{row[column_list[1]]}"
-                     ,"{row[column_list[2]]}"
-                     ,"{keyword}"
-                     ,"{row[column_list[3]]}"
-                     ,"{row[column_list[4]]}"
-                     ,"{row[column_list[5]]}"
-                     );
-                     """)
-                else:
-                    query = (f"""
-                     INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM)
-                     VALUES (
-                     "{row[column_list[0]]}"
-                     ,"{row[column_list[1]]}"
-                     ,"{row[column_list[2]]}"
-                     ,"{keyword}"
-                     ,"{row[column_list[3]]}"
-                     ,"{row[column_list[4]]}"
-                     );
-                     """)
+                query = (f"""
+                INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM)
+                VALUES (
+                "{row[column_list[0]]}"
+                ,"{row[column_list[1]]}"
+                ,"{row[column_list[2]]}"
+                ,"{keyword}"
+                ,"{row[column_list[3]]}"
+                ,"{row[column_list[4]]}"
+                );
+                """)
                 cnx.execute(query)
             except:
-                if first_run == True:
-                    query = (f"""
-                     INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM, OVERALL_EMO)
-                     VALUES (
-                     '{row[column_list[0]]}'
-                     ,'{row[column_list[1]]}'
-                     ,'{row[column_list[2]]}'
-                     ,'{keyword}
-                     ,'{row[column_list[3]]}'
-                     ,'{row[column_list[4]]}'
-                     ,'{row[column_list[5]]}'
-                     );
-                     """)
-                else:
-                    query = (f"""
-                     INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM)
-                     VALUES (
-                     '{row[column_list[0]]}'
-                     ,'{row[column_list[1]]}'
-                     ,'{row[column_list[2]]}'
-                     ,'{keyword}
-                     ,'{row[column_list[3]]}'
-                     ,'{row[column_list[4]]}'
-                     );
-                     """)
+                query = (f"""
+                 INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM)
+                 VALUES (
+                 '{row[column_list[0]]}'
+                 ,'{row[column_list[1]]}'
+                 ,'{row[column_list[2]]}'
+                 ,'{keyword}'
+                 ,'{row[column_list[3]]}'
+                 ,'{row[column_list[4]]}'
+                 );
+                 """)
                 cnx.execute(query)
         except:
             continue
@@ -320,21 +282,14 @@ def database_load(search_term):
     results = n.gridsearch(search_term)
     results.insert(0,search_term)
 
-    term_check = search_term
-
     for term in tqdm(results):
         for i in tqdm(range(1, 26)):
-            if term != term_check:
-                first_run_param = True
-                term_check = term
-            else:
-                first_run_param = False
             start_date = dt.datetime.now()+dt.timedelta(days=-i-1)
             start_date = start_date.strftime('%Y-%m-%d')
             end_date = dt.datetime.now()+dt.timedelta(days=-i)
             end_date = end_date.strftime('%Y-%m-%d')
             try:
-                d.load_tweets(term, start_date, end_date, 500, first_run=first_run_param)
+                d.load_tweets(term, start_date, end_date, 500)
             except:
                 print(f"There were no tweets for {term} on {start_date}")
 
