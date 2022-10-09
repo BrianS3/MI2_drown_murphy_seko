@@ -116,7 +116,7 @@ def load_tweets(keyword, start_date, end_date, results = 500, first_run=True):
     print("Tweets cleaned")
 
     n.lemmatize(df_text)
-    df_text = df_text[['TWEET_ID', 'AUTHOR_ID', 'CREATED', 'TIDY_TWEET', 'LEMM']]
+    df_text = df_text[['TWEET_ID', 'AUTHOR_ID', 'CREATED', 'TIDY_TWEET', 'LEMM', 'HASHTAGS']]
     df_text['CREATED'] = df_text['CREATED'].astype('datetime64[ns]').dt.date
     df_text['TIDY_TWEET'] = [re.sub("[']", "", item) for item in df_text['TIDY_TWEET']]
     column_list = list(df_text.columns)
@@ -128,7 +128,7 @@ def load_tweets(keyword, start_date, end_date, results = 500, first_run=True):
         try:
             try:
                 query = (f"""
-                INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM)
+                INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM, HASHTAGS)
                 VALUES (
                 "{row[column_list[0]]}"
                 ,"{row[column_list[1]]}"
@@ -136,12 +136,13 @@ def load_tweets(keyword, start_date, end_date, results = 500, first_run=True):
                 ,"{keyword}"
                 ,"{row[column_list[3]]}"
                 ,"{row[column_list[4]]}"
+                ,"{row[column_list[5]]}"
                 );
                 """)
                 cnx.execute(query)
             except:
                 query = (f"""
-                 INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM)
+                 INSERT INTO TWEET_TEXT (TWEET_ID, AUTHOR_ID, CREATED, SEARCH_TERM, TIDY_TWEET, LEMM, HASHTAGS)
                  VALUES (
                  '{row[column_list[0]]}'
                  ,'{row[column_list[1]]}'
@@ -149,6 +150,7 @@ def load_tweets(keyword, start_date, end_date, results = 500, first_run=True):
                  ,'{keyword}'
                  ,'{row[column_list[3]]}'
                  ,'{row[column_list[4]]}'
+                 ,'{row[column_list[5]]}'
                  );
                  """)
                 cnx.execute(query)
