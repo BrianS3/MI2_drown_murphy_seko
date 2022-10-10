@@ -195,7 +195,6 @@ def get_associated_keywords(df, search_term, perc_in_words=0.1, **kwargs):
             for word in associated_keywords:
                 if search_term in word:
                     associated_keywords.remove(word)
-                    print("")
         return associated_keywords[:3]
 
     except ValueError:
