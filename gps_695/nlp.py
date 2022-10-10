@@ -222,7 +222,8 @@ def evaluate_keywords(search_term, keyword_list):
         :return: dataframe with google trend data per term
         """
         from pytrends.request import TrendReq
-        pytrends = TrendReq(hl='en-US', tz=360)
+#         pytrends = TrendReq(hl='en-US', tz=360)
+        pytrends = TrendReq()
         pytrends.build_payload(kw_list, cat=0, timeframe='today 12-m')
         data = pytrends.interest_over_time()
         data = data.reset_index()
