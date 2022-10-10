@@ -192,56 +192,59 @@ def get_associated_keywords(df, search_term, perc_in_words=0.1, **kwargs):
         for topic in range(components_df.shape[0]):
             tmp = components_df.iloc[topic]
             associated_keywords = list(tmp.nlargest().index)
+            coherency_scores = dict(tmp.nlargest())
             for word in associated_keywords:
                 if search_term in word:
                     associated_keywords.remove(word)
-        return associated_keywords[:3]
+                    result = {k:v for k,v in coherency_scores.items() if search_term not in k}
+
+        return result
 
     except ValueError:
         return "Could not find associated topics."
 
-def evaluate_keywords(search_term, keyword_list):
-    '''
-    Original search_term, list of associated search terms found by get_associated_keywords()
-    Uses distance metric to determine the closest 2 terms to original search_term based on Google Trends
-    :param search_term: search term used in primary data loading
-    :param keyword_list: keyword list returned from get_associated_keywords
-    :return: OUTPUT list of 2 closest terms (strings)
-    '''
-    import pandas as pd
-    from sklearn.metrics import mean_squared_error
+# def evaluate_keywords(search_term, keyword_list):
+#     '''
+#     Original search_term, list of associated search terms found by get_associated_keywords()
+#     Uses distance metric to determine the closest 2 terms to original search_term based on Google Trends
+#     :param search_term: search term used in primary data loading
+#     :param keyword_list: keyword list returned from get_associated_keywords
+#     :return: OUTPUT list of 2 closest terms (strings)
+#     '''
+#     import pandas as pd
+#     from sklearn.metrics import mean_squared_error
 
-    kw = keyword_list
-    kw.insert(0, search_term)
+#     kw = keyword_list
+#     kw.insert(0, search_term)
 
 
-    def check_trend(kw_list):
-        """
-        Uses google trend to build a simple line chart of the current trend by keyword/phrase
-        :param: keyword: or phrase, or many keywords/phrases separated by commas. Must be strings.
-        :return: dataframe with google trend data per term
-        """
-        from pytrends.request import TrendReq
-#         pytrends = TrendReq(hl='en-US', tz=360)
-        pytrends = TrendReq()
-        pytrends.build_payload(kw_list, cat=0, timeframe='today 12-m')
-        data = pytrends.interest_over_time()
-        data = data.reset_index()
+#     def check_trend(kw_list):
+#         """
+#         Uses google trend to build a simple line chart of the current trend by keyword/phrase
+#         :param: keyword: or phrase, or many keywords/phrases separated by commas. Must be strings.
+#         :return: dataframe with google trend data per term
+#         """
+#         from pytrends.request import TrendReq
+# #         pytrends = TrendReq(hl='en-US', tz=360)
+#         pytrends = TrendReq()
+#         pytrends.build_payload(kw_list, cat=0, timeframe='today 12-m')
+#         data = pytrends.interest_over_time()
+#         data = data.reset_index()
 
-        return data
+#         return data
 
-    trend = check_trend(kw)
+#     trend = check_trend(kw)
 
-    trend_check = trend[kw[0]]
-    kw.pop(0)
-    out_data = pd.DataFrame(columns=['term', 'mse'])
+#     trend_check = trend[kw[0]]
+#     kw.pop(0)
+#     out_data = pd.DataFrame(columns=['term', 'mse'])
 
-    for i in range(0,len(kw)):
-        trend_compare = trend[kw[i]]
-        temp = pd.DataFrame(list(zip([kw[i]],[mean_squared_error(trend_check,trend_compare)])), columns=['term', 'mse'])
-        out_data = pd.concat([out_data,temp])
+#     for i in range(0,len(kw)):
+#         trend_compare = trend[kw[i]]
+#         temp = pd.DataFrame(list(zip([kw[i]],[mean_squared_error(trend_check,trend_compare)])), columns=['term', 'mse'])
+#         out_data = pd.concat([out_data,temp])
 
-    return out_data
+#     return out_data
 
 def gridsearch(search_term):
     """
@@ -271,6 +274,8 @@ def gridsearch(search_term):
     grid_search_results = pd.DataFrame()
     file = open('output_data/word_association_eval.txt', 'w')
 
+    grid_search_results = {}
+
     for ind, row in param_df.iterrows():
         alpha_val = row['alpha']
         l1_val = row['l1_ratio']
@@ -285,17 +290,18 @@ def gridsearch(search_term):
         file.write("\n")
         file.close()
 
-        grid_search_results = pd.DataFrame(columns=['term', 'mse'])
+        # grid_search_results = pd.DataFrame(columns=['term', 'mse'])
+        grid_search_results.update(kw_list)
 
-        for key in kw_list:
-            if key in list(grid_search_results['term']):
-                continue
-            else:
-                if kw_list != "Could not find associated topics.":
-                    top_terms = n.evaluate_keywords(search_term=search_term, keyword_list=kw_list)
-                    grid_search_results = pd.concat([grid_search_results, pd.DataFrame(top_terms, columns=['term', 'mse'])])
-                else:
-                    continue
+        # for key in kw_list:
+        #     if key in list(grid_search_results['term']):
+        #         continue
+        #     else:
+        #         if kw_list != "Could not find associated topics.":
+        #             top_terms = n.evaluate_keywords(search_term=search_term, keyword_list=kw_list)
+        #             grid_search_results = pd.concat([grid_search_results, pd.DataFrame(top_terms, columns=['term', 'mse'])])
+        #         else:
+        #             continue
 
     grid_search_results = grid_search_results.drop_duplicates()
     grid_search_results.to_csv('output_data/word_association_results.csv')
