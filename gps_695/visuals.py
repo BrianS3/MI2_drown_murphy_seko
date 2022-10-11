@@ -48,7 +48,7 @@ def emo_choropleth(df):
 
     import plotly.express as px
     fig = px.choropleth(df,
-                        locations='STATE', 
+                        locations='STATE_ABBR', 
                         locationmode="USA-states", 
                         scope="usa",
                         color='OVERALL_EMO',
@@ -56,8 +56,8 @@ def emo_choropleth(df):
                         )
 
     fig.update_layout(
-          title_text = 'Overall Emotion by State (of users with location listed)',
-          title_font_size = 20,
+          title_text = f"Overall Emotion by State (of users with location listed), Search Terms: {np.unique(df['SEARCH_TERM'])}",
+          title_font_size = 14,
           title_font_color="black", 
           title_x=0.45, 
              )
