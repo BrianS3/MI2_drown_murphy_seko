@@ -117,6 +117,17 @@ df = pd.read_sql_query(query, cnx)
 
 # Analyzing your data
 
+## Checking Pytrends
+This package has a feature that allows you to find out if a specific term or phrase is trending before executing a full run. Calling check_trend will display an analysis from google trends for the past 12 months. Google trends uses twitter as a resource, and this may help you evaluate the right keyword or phrase to run for your analysis.
+
+```commandline
+from gps_695 import visuals as v
+v.check_trend("hello") #single word analysis
+
+v.check_trend("hello", "goodbye", "nice to meet you") #or put in multiple words
+```
+
+
 # FAQs
 1) How long does the package take to run?
 
