@@ -48,17 +48,19 @@ def emo_choropleth():
     from gps_695 import database as d
     import pandas as pd
     import plotly.express as px
+    import numpy as np
 
     try:
         cnx = d.connect_to_database()
     except:
         print('Credentials not loaded, use credentials.load_env_credentials()')
 
-    query = """"
-    SELECT * FROM TWEET_TEXT T
-    JOIN AUTHOR_LOCATION A ON T.AUTHOR_ID = A.AUTHOR_ID
-    JOIN US_STATES U ON A.STATE_ID = U.STATE_ID;
-    """
+    query = """
+    SELECT * FROM TWEET_TEXT
+    JOIN AUTHOR_LOCATION
+    USING (AUTHOR_ID)
+    JOIN US_STATES
+    USING (STATE_ID);"""
     df = pd.read_sql_query(query, cnx)
 
     fig = px.choropleth(df,
@@ -70,7 +72,7 @@ def emo_choropleth():
                         )
 
     fig.update_layout(
-          title_text = f"Overall Emotion by State (of users with location listed),<br>Search Terms: {np.unique(df['SEARCH_TERM'])}",
+          title_text = f"Overall Emotion by State (of users with location listed), Search Terms: {np.unique(df['SEARCH_TERM'])}",
           title_font_size = 14,
           title_font_color="black", 
           title_x=0.45, 
@@ -104,7 +106,7 @@ def hashtag_chart(df):
         y = alt.Y('index:N', sort='-x', axis=alt.Axis(grid=False, title='hashtag')),
         x = alt.X('count:Q', axis=alt.Axis(grid=False)),
         color = alt.Color('count:Q',scale=alt.Scale(scheme="goldorange"), legend=None)
-    ).properties(height=175, width=250).configure_view(strokeOpacity=0)
+    ).properties(height=175, width=250)
     
     return bars
     
