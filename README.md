@@ -75,6 +75,25 @@ c.load_env_credentials()
 d.database_load("hello")
 ```
 
+## Do several database loads
+
+If you set up multiple databases you can string together an analysis:
+
+```commandline
+from gps_695 import credentials as c
+from gps_695 import database as d
+
+databases = ['database_1','database_2','database_3','database_4']
+words = ['Iran', 'Nury Martinez', 'california drought', 'Putin']
+
+for i in range(4):
+
+    c.create_env_variables(database = databases[i])
+    c.load_env_credentials()
+    d.database_load(words[i])
+```
+
+
 ## Creating your database
 
 This package will automatically create a database when you choose to execute ```database.database_load("keyword")```, however you can do this process on your own at any time.
