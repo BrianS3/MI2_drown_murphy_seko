@@ -43,7 +43,7 @@ def emo_choropleth(df):
     '''
     INPUT: dataframe with specific columns
     Creates a choropleth map of overall_emo by state
-    OUTPUT: choropleth visualization
+    OUTPUT: plotly choropleth visualization
     '''
 
     import plotly.express as px
