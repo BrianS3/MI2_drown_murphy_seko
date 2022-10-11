@@ -14,3 +14,81 @@ def check_trend(*args):
     import plotly.express as px
     fig = px.line(data, x="date", y=kw_list, title='Keyword Web Search Interest Over Time')
     fig.show()
+    
+    
+def streamgraph(df):
+    '''
+    INPUT: dataframe with specific columns
+    Creates a streamgraph: counts of overall emotions by date
+    OUTPUT: altair streamgraph visualization
+    '''
+    import altair as alt
+    alt.data_transformers.disable_max_rows()
+
+    chart = alt.Chart(df, title=f"Search Terms: {np.unique(df['SEARCH_TERM'])}").mark_area().encode(
+        alt.X('CREATED:T',
+            axis=alt.Axis(domain=False, grid=False, tickSize=0)
+        ),
+        alt.Y('count(OVERALL_EMO):N', stack='center',
+             axis=alt.Axis(domain=False, grid=False, tickSize=0)),
+        alt.Color('OVERALL_EMO:N',
+            scale=alt.Scale(scheme='tableau10')
+        )
+    ).properties(width=500).configure_view(strokeOpacity=0)
+
+    return chart
+
+
+def emo_choropleth(df):
+    '''
+    INPUT: dataframe with specific columns
+    Creates a choropleth map of overall_emo by state
+    OUTPUT: plotly choropleth visualization
+    '''
+
+    import plotly.express as px
+    fig = px.choropleth(df,
+                        locations='STATE', 
+                        locationmode="USA-states", 
+                        scope="usa",
+                        color='OVERALL_EMO',
+                        color_discrete_sequence=px.colors.qualitative.Bold,
+                        )
+
+    fig.update_layout(
+          title_text = 'Overall Emotion by State (of users with location listed)',
+          title_font_size = 20,
+          title_font_color="black", 
+          title_x=0.45, 
+             )
+
+    return fig.show()
+
+
+def hashtag_chart(df):
+    '''
+    INPUT: df with specific columns
+    Creates a bar chart with top 10(max) hashtags
+    OUTPUT altair bar chart visualization
+    '''
+    
+    from collections import Counter
+
+    hash_counts = Counter(df['HASHTAGS'])
+    hash_counts.pop('[]')
+    
+    hash_df = pd.DataFrame.from_dict(hash_counts, orient='index', columns=['count'])
+    hash_df = hash_df.reset_index()
+    hash_df = hash_df.sort_values('count', ascending=False)
+    hash_df = hash_df[:10]
+    hash_df.reset_index(inplace=True, drop=True)
+
+
+    bars = alt.Chart(hash_df, title="Top Hashtags").mark_bar().encode(
+        y = alt.Y('index:N', sort='-x', axis=alt.Axis(grid=False, title='hashtag')),
+        x = alt.X('count:Q', axis=alt.Axis(grid=False)),
+        color = alt.Color('count:Q',scale=alt.Scale(scheme="goldorange"), legend=None)
+    ).properties(height=175, width=250)
+    
+    return bars
+    
