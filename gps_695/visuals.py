@@ -18,11 +18,21 @@ def check_trend(*args):
     
 def streamgraph(df):
     '''
-    INPUT: dataframe with specific columns
     Creates a streamgraph: counts of overall emotions by date
-    OUTPUT: altair streamgraph visualization
+    :return: altair streamgraph visualization
     '''
     import altair as alt
+    from gps_695 import database as d
+    import pandas as pd
+
+    try:
+        cnx = d.connect_to_database()
+    except:
+        print('Credentials not loaded, use credentials.load_env_credentials()')
+
+    query = 'SELECT * FROM TWEET_TEXT;'
+    df = pd.read_sql_query(query, cnx)
+
     alt.data_transformers.disable_max_rows()
 
     chart = alt.Chart(df, title=f"Search Terms: {np.unique(df['SEARCH_TERM'])}").mark_area().encode(
@@ -36,17 +46,32 @@ def streamgraph(df):
         )
     ).properties(width=500).configure_view(strokeOpacity=0)
 
-    return chart
+    chart.save('output_data/chart.png')
 
 
-def emo_choropleth(df):
+def emo_choropleth():
     '''
-    INPUT: dataframe with specific columns
     Creates a choropleth map of overall_emo by state
-    OUTPUT: plotly choropleth visualization
+    :return: None, image saved to "output_data" directory.
     '''
-
+    from gps_695 import database as d
+    import pandas as pd
     import plotly.express as px
+    import numpy as np
+
+    try:
+        cnx = d.connect_to_database()
+    except:
+        print('Credentials not loaded, use credentials.load_env_credentials()')
+
+    query = """
+    SELECT * FROM TWEET_TEXT
+    JOIN AUTHOR_LOCATION
+    USING (AUTHOR_ID)
+    JOIN US_STATES
+    USING (STATE_ID);"""
+    df = pd.read_sql_query(query, cnx)
+
     fig = px.choropleth(df,
                         locations='STATE_ABBR', 
                         locationmode="USA-states", 
@@ -56,13 +81,13 @@ def emo_choropleth(df):
                         )
 
     fig.update_layout(
-          title_text = f"Overall Emotion by State (of users with location listed),<br>Search Terms: {np.unique(df['SEARCH_TERM'])}",
+          title_text = f"Overall Emotion by State (of users with location listed), Search Terms: {np.unique(df['SEARCH_TERM'])}",
           title_font_size = 14,
           title_font_color="black", 
           title_x=0.45, 
              )
 
-    return fig.show()
+    fig.write_image('output_data/choro_overall_emo.png')
 
 
 def hashtag_chart(df):
@@ -88,7 +113,7 @@ def hashtag_chart(df):
         y = alt.Y('index:N', sort='-x', axis=alt.Axis(grid=False, title='hashtag')),
         x = alt.X('count:Q', axis=alt.Axis(grid=False)),
         color = alt.Color('count:Q',scale=alt.Scale(scheme="goldorange"), legend=None)
-    ).properties(height=175, width=250).configure_view(strokeOpacity=0)
+    ).properties(height=175, width=250)
     
     return bars
     
