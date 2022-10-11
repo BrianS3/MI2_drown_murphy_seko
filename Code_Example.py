@@ -12,6 +12,7 @@ api_bearer = ''
 db_host = ''
 database = ''
 
+#you can load
 c.create_env_variables(db_user=db_user, db_pass=db_pass, api_bearer=api_bearer, db_host=db_host, database=database)
 
 #loading credentials to current environment
@@ -24,7 +25,7 @@ print(os.getenv('database'))
 print(os.getenv('twitter_bearer'))
 
 #connect to your database
-d.connect_to_database()
+cnx = d.connect_to_database()
 
 #set up your database to recieve twitter data
 d.create_mysql_database()
