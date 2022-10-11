@@ -56,7 +56,7 @@ def emo_choropleth(df):
                         )
 
     fig.update_layout(
-          title_text = f"Overall Emotion by State (of users with location listed), Search Terms: {np.unique(df['SEARCH_TERM'])}",
+          title_text = f"Overall Emotion by State (of users with location listed),<br>Search Terms: {np.unique(df['SEARCH_TERM'])}",
           title_font_size = 14,
           title_font_color="black", 
           title_x=0.45, 
