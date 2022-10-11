@@ -39,14 +39,28 @@ def streamgraph(df):
     return chart
 
 
-def emo_choropleth(df):
+def emo_choropleth():
     '''
     INPUT: dataframe with specific columns
     Creates a choropleth map of overall_emo by state
     OUTPUT: plotly choropleth visualization
     '''
-
+    from gps_695 import database as d
+    import pandas as pd
     import plotly.express as px
+
+    try:
+        cnx = d.connect_to_database()
+    except:
+        print('Credentials not loaded, use credentials.load_env_credentials()')
+
+    query = """"
+    SELECT * FROM TWEET_TEXT T
+    JOIN AUTHOR_LOCATION A ON T.AUTHOR_ID = A.AUTHOR_ID
+    JOIN US_STATES U ON A.STATE_ID = U.STATE_ID;
+    """
+    df = pd.read_sql_query(query, cnx)
+
     fig = px.choropleth(df,
                         locations='STATE_ABBR', 
                         locationmode="USA-states", 
@@ -61,6 +75,8 @@ def emo_choropleth(df):
           title_font_color="black", 
           title_x=0.45, 
              )
+
+    fig.show()
 
     return fig.show()
 
