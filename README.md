@@ -61,6 +61,22 @@ Once the .env file is created, use the following code to load your credentials p
 c.load_env_credentials()
 ```
 
+### Check your credentials
+
+```
+import os 
+from gps_695 import credentials as 
+
+c.load_env_credentials()
+
+print(os.getenv('mysql_username'))
+print(os.getenv('mysql_pass'))
+print(os.getenv('db_host'))
+print(os.getenv('database'))
+print(os.getenv('twitter_bearer'))
+```
+
+
 # Example code 
 
 ## Do a full database load
@@ -74,6 +90,25 @@ from gps_695 import database as d
 c.load_env_credentials()
 d.database_load("hello")
 ```
+
+## Do several database loads
+
+If you set up multiple databases you can string together an analysis:
+
+```commandline
+from gps_695 import credentials as c
+from gps_695 import database as d
+
+databases = ['database_1','database_2','database_3','database_4']
+words = ['Iran', 'Nury Martinez', 'california drought', 'Putin']
+
+for i in range(4):
+
+    c.create_env_variables(database = databases[i])
+    c.load_env_credentials()
+    d.database_load(words[i])
+```
+
 
 ## Creating your database
 
@@ -116,6 +151,17 @@ df = pd.read_sql_query(query, cnx)
 ```
 
 # Analyzing your data
+
+## Checking Pytrends
+This package has a feature that allows you to find out if a specific term or phrase is trending before executing a full run. Calling check_trend will display an analysis from google trends for the past 12 months. Google trends uses twitter as a resource, and this may help you evaluate the right keyword or phrase to run for your analysis.
+
+```commandline
+from gps_695 import visuals as v
+v.check_trend("hello") #single word analysis
+
+v.check_trend("hello", "goodbye", "nice to meet you") #or put in multiple words
+```
+
 
 # FAQs
 1) How long does the package take to run?
