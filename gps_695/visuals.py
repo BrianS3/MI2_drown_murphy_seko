@@ -70,7 +70,7 @@ def emo_choropleth():
                         )
 
     fig.update_layout(
-          title_text = f"Overall Emotion by State (of users with location listed), Search Terms: {np.unique(df['SEARCH_TERM'])}",
+          title_text = f"Overall Emotion by State (of users with location listed),<br>Search Terms: {np.unique(df['SEARCH_TERM'])}",
           title_font_size = 14,
           title_font_color="black", 
           title_x=0.45, 
@@ -104,7 +104,7 @@ def hashtag_chart(df):
         y = alt.Y('index:N', sort='-x', axis=alt.Axis(grid=False, title='hashtag')),
         x = alt.X('count:Q', axis=alt.Axis(grid=False)),
         color = alt.Color('count:Q',scale=alt.Scale(scheme="goldorange"), legend=None)
-    ).properties(height=175, width=250)
+    ).properties(height=175, width=250).configure_view(strokeOpacity=0)
     
     return bars
     
