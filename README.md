@@ -61,6 +61,22 @@ Once the .env file is created, use the following code to load your credentials p
 c.load_env_credentials()
 ```
 
+### Check your credentials
+
+```
+import os 
+from gps_695 import credentials as 
+
+c.load_env_credentials()
+
+print(os.getenv('mysql_username'))
+print(os.getenv('mysql_pass'))
+print(os.getenv('db_host'))
+print(os.getenv('database'))
+print(os.getenv('twitter_bearer'))
+```
+
+
 # Example code 
 
 ## Do a full database load
