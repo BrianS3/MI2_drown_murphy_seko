@@ -18,11 +18,21 @@ def check_trend(*args):
     
 def streamgraph(df):
     '''
-    INPUT: dataframe with specific columns
     Creates a streamgraph: counts of overall emotions by date
-    OUTPUT: altair streamgraph visualization
+    :return: altair streamgraph visualization
     '''
     import altair as alt
+    from gps_695 import database as d
+    import pandas as pd
+
+    try:
+        cnx = d.connect_to_database()
+    except:
+        print('Credentials not loaded, use credentials.load_env_credentials()')
+
+    query = 'SELECT * FROM TWEET_TEXT;'
+    df = pd.read_sql_query(query, cnx)
+
     alt.data_transformers.disable_max_rows()
 
     chart = alt.Chart(df, title=f"Search Terms: {np.unique(df['SEARCH_TERM'])}").mark_area().encode(
@@ -36,14 +46,13 @@ def streamgraph(df):
         )
     ).properties(width=500).configure_view(strokeOpacity=0)
 
-    return chart
+    chart.save('output_data/chart.png')
 
 
 def emo_choropleth():
     '''
-    INPUT: dataframe with specific columns
     Creates a choropleth map of overall_emo by state
-    OUTPUT: plotly choropleth visualization
+    :return: None, image saved to "output_data" directory.
     '''
     from gps_695 import database as d
     import pandas as pd
@@ -78,9 +87,7 @@ def emo_choropleth():
           title_x=0.45, 
              )
 
-    fig.show()
-
-    return fig.show()
+    fig.write_image('output_data/choro_overall_emo.png')
 
 
 def hashtag_chart(df):
