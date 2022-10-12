@@ -121,3 +121,67 @@ def hashtag_chart():
     
     save(bars, "output_data/hashtag_bars.html")
     
+def interactive_tweet_trends():
+    """
+    Creates interactive chart of tweet trends and emotions over time.
+    :return: None, chart is saved to output folder
+    """
+    import pandas as pd
+    import altair as alt
+    from gps_695 import database as d
+
+    cnx = d.connect_to_database()
+
+    df_volume = pd.read_sql_query("""
+    SELECT
+    created
+    ,round(count(tweet_id)/count(distinct search_term)) as avg_vol
+    FROM TWEET_TEXT
+    group by created;
+    """, cnx)
+
+    df_sent = pd.read_sql_query("""
+    select 
+    created
+    ,overall_emo
+    ,count(overall_emo)/count(distinct search_term) as emo_count
+    from tweet_text
+    group by created, overall_emo;
+    """, cnx)
+
+    brush = alt.selection_interval(encodings=['x'])
+    colorConditionDC = alt.condition(brush, alt.value('#2182bd'), alt.value('gray'))
+
+    volume = alt.Chart(df_volume).mark_bar(color='grey').encode(
+        x=alt.X('created', title="Date Created"),
+        y=alt.Y('avg_vol:Q', title="Average Tweet Volume")
+    ).properties(height=200, width=700)
+
+    i_volume = volume.add_selection(brush).encode(color=colorConditionDC).resolve_scale(y='shared'
+                                                                                        )
+    sent_line = alt.Chart(df_sent).mark_line(size=2).encode(
+        x=alt.X('created', title="Date Created"),
+        y=alt.Y('emo_count:Q', title="Count of Emotions"),
+        color=alt.Color('overall_emo', legend=None),
+        tooltip='overall_emo'
+    ).properties(height=200, width=700)
+
+    selection = alt.selection_multi(fields=['overall_emo'])
+    make_selector = alt.Chart(df_sent).mark_rect().encode(
+        y=alt.Y('overall_emo', title=None),
+        color='overall_emo'
+    ).add_selection(selection).properties(title="Click to Filter")
+
+    i_sent_line = sent_line.transform_filter(brush).resolve_scale(y='shared').transform_filter(selection)
+
+    out = (i_volume & (i_sent_line | make_selector)).configure_range(
+        category={'scheme': 'rainbow'}
+    ).properties(
+        title={
+            "text": ["Tweet Volume and Sentiment Over Time"],
+            "subtitle": ["",
+                         "I'm Interactive, select a section on the bar chart to zoom in on sentiment values",
+                         "Select an emotion to focus", ""]}
+    )
+
+    save(out, "trend_sent_analysis.html")
