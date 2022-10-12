@@ -22,8 +22,10 @@ def streamgraph(df):
     :return: altair streamgraph visualization
     '''
     import altair as alt
+    from altair_saver import save
     from gps_695 import database as d
     import pandas as pd
+    import numpy as np
 
     try:
         cnx = d.connect_to_database()
@@ -46,7 +48,7 @@ def streamgraph(df):
         )
     ).properties(width=500).configure_view(strokeOpacity=0)
 
-    chart.save('output_data/chart.png')
+    save(chart, "output_data/streamgraph.html")
 
 
 def emo_choropleth():
@@ -90,14 +92,26 @@ def emo_choropleth():
     fig.write_image('output_data/choro_overall_emo.png')
 
 
-def hashtag_chart(df):
+def hashtag_chart():
     '''
     INPUT: df with specific columns
     Creates a bar chart with top 10(max) hashtags
     OUTPUT altair bar chart visualization
     '''
-    
+    import altair as alt
+    import pandas as pd
+    from altair_saver import save
     from collections import Counter
+    from gps_695 import database as d
+    
+    try:
+        cnx = d.connect_to_database()
+    except:
+        print('Credentials not loaded, use credentials.load_env_credentials()')
+
+    query = 'SELECT * FROM TWEET_TEXT;'
+    df = pd.read_sql_query(query, cnx)
+    
 
     hash_counts = Counter(df['HASHTAGS'])
     hash_counts.pop('[]')
@@ -115,5 +129,5 @@ def hashtag_chart(df):
         color = alt.Color('count:Q',scale=alt.Scale(scheme="goldorange"), legend=None)
     ).properties(height=175, width=250)
     
-    return bars
+    save(bars, "output_data/hashtag_bars.html")
     
