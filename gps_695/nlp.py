@@ -21,26 +21,28 @@ def clean_tweets(df):
         tweet=str(tweet)
         tweet = tweet.lower().strip()
         hashtags.append(re.findall(r"\B#\w*[a-zA-Z]+\w*", tweet.lower().strip())) # isolate hashtags
-        tweet = re.sub("[0-9]", " ", tweet) # digits
-        tweet = re.sub("@[\w]*", " ", tweet) # usernames
-        tweet = re.sub(r"https?:\/\/.*[\r\n]*", " ", tweet) # URLs
-        tweet = re.sub(r"[^\w'\s]+", " ", tweet) # punctuation
-        tweet = tweet.replace("rt    ", "")
+        tweet = re.sub("[0-9]", "", tweet) # digits
+        tweet = re.sub("@[\w]*", "", tweet) # usernames
+        tweet = re.sub(r"https?:\/\/.*[\r\n]*", "", tweet) # URLs
+        tweet = re.sub(r"[^\w'\s]+", "", tweet) # punctuation
+        tweet = tweet.replace("rt", "")
 
         # Detect language
         if tweet.strip() == "":
             # making empty tweets non-English so they are removed; detect won't process empty strings
             tweet = "donde está el baño"
-        lang = detect(tweet.strip())
+        tweet = tweet.lstrip()
+        tweet = tweet.rstrip()
+        lang = detect(tweet)
 
         if lang != 'en':
-            tweet=np.nan
+            tweet="!!!DELTEME!!!"
 
         tweets.append(tweet)
 
     data['TIDY_TWEET'] = tweets
     data['HASHTAGS'] = hashtags
-    data=data.dropna()
+    data=data[data['TIDY_TWEET']!='!!!DELTEME!!!']
 
     return data
 
@@ -185,7 +187,7 @@ def get_associated_keywords(df, search_term, perc_in_words=0.1, **kwargs):
 
     # term must appear in 10% of tweets, looking for bigrams
     result = {}
-    # global result
+
     try:
         X = vect.fit_transform(df2.LEMM)
         model = NMF(**kwargs, max_iter=1000)
@@ -193,12 +195,10 @@ def get_associated_keywords(df, search_term, perc_in_words=0.1, **kwargs):
         components_df = pd.DataFrame(model.components_, columns=vect.get_feature_names_out())
         for topic in range(components_df.shape[0]):
             tmp = components_df.iloc[topic]
-            associated_keywords = list(tmp.nlargest().index)
+            #associated_keywords = list(tmp.nlargest().index)
             coherency_scores = dict(tmp.nlargest())
-            for word in associated_keywords:
-                if search_term in word:
-                    associated_keywords.remove(word)
-                    result = {k:v for k,v in coherency_scores.items() if search_term not in k}
+            temp_dict = {k: v for k, v in coherency_scores.items() if search_term.lower() not in k}
+            result.update(temp_dict)
         return result
 
     except ValueError:
@@ -249,9 +249,10 @@ def gridsearch(search_term):
 
         grid_search_results.update(kw_list)
 
-    associated_words_df = pd.DataFrame(grid_search_results.most_common())
+    associated_words_df = pd.DataFrame(grid_search_results.most_common(), columns=['term', 'score'])
+    associated_words_df = associated_words_df[associated_words_df['term'].str.len()>1]
     associated_words_df.to_csv('output_data/word_association_results.csv')
-    associated_words = [x[0] for x in grid_search_results.most_common(2)]
+    associated_words = list(associated_words_df.sort_values('score', ascending=False)[:2]['term'])
 
     return associated_words
 
