@@ -10,7 +10,10 @@ def connect_to_database():
     import sqlalchemy
     connection_string = f'mysql://{os.getenv("mysql_username")}:{os.getenv("mysql_pass")}@{os.getenv("db_host")}:3306/{os.getenv("database")}'
     engine = sqlalchemy.create_engine(connection_string)
-    cnx = engine.connect()
+    try:
+        cnx = engine.connect()
+    except:
+        print('Credentials not loaded, use credentials.load_env_credentials()')
 
     return cnx
 

@@ -27,10 +27,7 @@ def streamgraph(df):
     import pandas as pd
     import numpy as np
 
-    try:
-        cnx = d.connect_to_database()
-    except:
-        print('Credentials not loaded, use credentials.load_env_credentials()')
+    cnx = d.connect_to_database()
 
     query = 'SELECT * FROM TWEET_TEXT;'
     df = pd.read_sql_query(query, cnx)
@@ -61,10 +58,7 @@ def emo_choropleth():
     import plotly.express as px
     import numpy as np
 
-    try:
-        cnx = d.connect_to_database()
-    except:
-        print('Credentials not loaded, use credentials.load_env_credentials()')
+    cnx = d.connect_to_database()
 
     query = """
     SELECT * FROM TWEET_TEXT
@@ -94,9 +88,8 @@ def emo_choropleth():
 
 def hashtag_chart():
     '''
-    INPUT: df with specific columns
     Creates a bar chart with top 10(max) hashtags
-    OUTPUT altair bar chart visualization
+    :return: altair bar chart visualization
     '''
     import altair as alt
     import pandas as pd
@@ -104,10 +97,7 @@ def hashtag_chart():
     from collections import Counter
     from gps_695 import database as d
     
-    try:
-        cnx = d.connect_to_database()
-    except:
-        print('Credentials not loaded, use credentials.load_env_credentials()')
+    cnx = d.connect_to_database()
 
     query = 'SELECT * FROM TWEET_TEXT;'
     df = pd.read_sql_query(query, cnx)

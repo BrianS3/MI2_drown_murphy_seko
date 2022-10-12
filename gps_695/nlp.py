@@ -24,7 +24,7 @@ def clean_tweets(df):
         tweet = re.sub("[0-9]", "", tweet) # digits
         tweet = re.sub("@[\w]*", "", tweet) # usernames
         tweet = re.sub(r"https?:\/\/.*[\r\n]*", "", tweet) # URLs
-        tweet = re.sub(r"[^\w'\s]+", "", tweet) # punctuation
+        tweet = re.sub(r"[^\w'\s]+", " ", tweet) # punctuation
         tweet = tweet.replace("rt", "")
 
         # Detect language
