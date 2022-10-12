@@ -25,6 +25,7 @@ def streamgraph(df):
     from altair_saver import save
     from gps_695 import database as d
     import pandas as pd
+    import numpy as np
 
     try:
         cnx = d.connect_to_database()
