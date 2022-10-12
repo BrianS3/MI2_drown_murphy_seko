@@ -230,7 +230,7 @@ def gridsearch(search_term):
         grid_search_params,
         columns=['alpha', 'l1_ratio', 'percents'])
 
-    file = open('output_data/word_association_eval.txt', 'w')
+    file = open('output_data/word_association_eval.txt', 'w', encoding="utf-8")
     grid_search_results = Counter()
 
     for ind, row in param_df.iterrows():
@@ -243,8 +243,10 @@ def gridsearch(search_term):
 
         kw_list = n.get_associated_keywords(df, search_term, perc_in_words=perc_val.astype(float),
                                             alpha_W=alpha_val.astype(float), l1_ratio=l1_val.astype(int))
-        file.write(f"{kw_list}")
-        file.write("\n")
+
+        for k,v in kw_list.items():
+            file.write(f"{k.encode('utf8')}")
+            file.write("\n")
         file.close()
 
         grid_search_results.update(kw_list)
