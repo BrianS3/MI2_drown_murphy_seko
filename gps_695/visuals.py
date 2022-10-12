@@ -121,6 +121,53 @@ def hashtag_chart():
     
     save(bars, "output_data/hashtag_bars.html")
     
+def forecast_chart():
+    '''
+    Creates a line chart with projected tweet volumes for next 10 days
+    :return: altair bar chart visualization
+    '''
+    from gps_695 import database as d
+    import pandas as pd
+    import numpy as np
+    from statsmodels.tsa.arima.model import ARIMA
+    import datetime
+    import altair as alt
+    from altair_saver import save
+
+    cnx = d.connect_to_database()
+
+    query = """
+    SELECT COUNT(CREATED), CREATED FROM TWEET_TEXT
+    GROUP BY CREATED"""
+    df = pd.read_sql_query(query, cnx)
+    df.drop(df.tail(1).index,inplace=True)
+    x_dates = []
+    df['CREATED']= pd.to_datetime(df['CREATED'])
+    for i in range(10):
+        x_dates.append(df['CREATED'].max() + datetime.timedelta(days=i+1))
+
+    ARIMAmodel = ARIMA(df['COUNT(CREATED)'], order = (2, 0, 2))
+    ARIMAmodel = ARIMAmodel.fit()
+    y_pred = ARIMAmodel.get_forecast(10)
+    y_pred_df = y_pred.conf_int(alpha = 0.05)
+    y_pred_df["Predictions"] = ARIMAmodel.predict(start = y_pred_df.index[0], end = y_pred_df.index[-1])
+    y_pred_df['CREATED'] = x_dates
+
+    df = pd.concat([df,y_pred_df])
+    lines = alt.Chart(df).mark_line().encode(
+    x='CREATED',
+    y = alt.Y('COUNT(CREATED)'),
+    y2 = alt.Y('Predictions:Q')
+    )
+
+    base = alt.Chart(df.reset_index()).encode(x='CREATED')
+
+    lines = alt.layer(
+        base.mark_line(color='black').encode(y='COUNT(CREATED)'),
+        base.mark_line(color='orange').encode(y='Predictions:Q')
+    )
+    save(lines, "output_data/predict_lines.html")
+
 def interactive_tweet_trends():
     """
     Creates interactive chart of tweet trends and emotions over time.
