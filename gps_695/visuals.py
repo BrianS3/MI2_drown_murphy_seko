@@ -50,13 +50,14 @@ def streamgraph(df):
 
 def emo_choropleth():
     '''
-    Creates a choropleth map of overall_emo by state
+    Creates a choropleth map of most common overall_emo by state, excluding 'Neutral' and 'Mixed'
     :return: None, image saved to "output_data" directory.
     '''
     from gps_695 import database as d
     import pandas as pd
     import plotly.express as px
     import numpy as np
+    from collections import Counter
 
     cnx = d.connect_to_database()
 
@@ -68,12 +69,24 @@ def emo_choropleth():
     USING (STATE_ID);"""
     df = pd.read_sql_query(query, cnx)
 
+    df = df.where(df.OVERALL_EMO != 'Mixed').dropna()
+    df = df.where(df.OVERALL_EMO != 'Neutral').dropna()
+    
+    most_common_list = []
+    for state in df['STATE_ABBR']:
+        state_df = df.where(df.STATE_ABBR == state).dropna()
+        counter = Counter(state_df['OVERALL_EMO'])
+        most_common_list.append(counter.most_common()[0][0])
+
+    df['MOST_COMMON_EMO'] = most_common_list
+    df = df.sort_values('MOST_COMMON_EMO')
+
     fig = px.choropleth(df,
                         locations='STATE_ABBR', 
                         locationmode="USA-states", 
                         scope="usa",
                         color='OVERALL_EMO',
-                        color_discrete_sequence=px.colors.qualitative.Bold,
+                        color_discrete_sequence=px.colors.qualitative.T10,
                         )
 
     fig.update_layout(
@@ -222,7 +235,7 @@ def interactive_tweet_trends():
     i_sent_line = sent_line.transform_filter(brush).resolve_scale(y='shared').transform_filter(selection)
 
     out = (i_volume & (i_sent_line | make_selector)).configure_range(
-        category={'scheme': 'rainbow'}
+        category={'scheme': 'tableau10'}
     ).properties(
         title={
             "text": ["Tweet Volume and Sentiment Over Time"],
