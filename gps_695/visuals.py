@@ -16,7 +16,7 @@ def check_trend(*args):
     fig.show()
     
     
-def streamgraph(df):
+def streamgraph():
     '''
     Creates a streamgraph: counts of overall emotions by date
     :return: altair streamgraph visualization
@@ -96,7 +96,7 @@ def emo_choropleth():
           title_x=0.45, 
              )
 
-    fig.write_image('output_data/choro_overall_emo.png')
+    fig.write_image('output_data/emo_choropleth.png')
 
 
 def hashtag_chart():
@@ -132,7 +132,7 @@ def hashtag_chart():
         color = alt.Color('count:Q',scale=alt.Scale(scheme="goldorange"), legend=None)
     ).properties(height=175, width=250)
     
-    save(bars, "output_data/hashtag_bars.html")
+    save(bars, "output_data/hashtag_chart.html")
     
 def forecast_chart():
     '''
@@ -179,7 +179,7 @@ def forecast_chart():
         base.mark_line(color='black').encode(y='COUNT(CREATED)'),
         base.mark_line(color='orange').encode(y='Predictions:Q')
     )
-    save(lines, "output_data/predict_lines.html")
+    save(lines, "output_data/forecast_chart.html")
 
 def interactive_tweet_trends():
     """
@@ -244,4 +244,4 @@ def interactive_tweet_trends():
                          "Select an emotion to focus", ""]}
     )
 
-    save(out, "trend_sent_analysis.html")
+    save(out, "output_data/interactive_tweet_trends.html")
