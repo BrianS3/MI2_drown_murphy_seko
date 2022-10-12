@@ -113,7 +113,7 @@ def hashtag_chart():
     hash_df.reset_index(inplace=True, drop=True)
 
 
-    bars = alt.Chart(hash_df, title="Top Hashtags").mark_bar().encode(
+    bars = alt.Chart(hash_df, title=["Top Hashtags", f"Search Terms: {np.unique(df['SEARCH_TERM'])}"]).mark_bar().encode(
         y = alt.Y('index:N', sort='-x', axis=alt.Axis(grid=False, title='hashtag')),
         x = alt.X('count:Q', axis=alt.Axis(grid=False)),
         color = alt.Color('count:Q',scale=alt.Scale(scheme="goldorange"), legend=None)
