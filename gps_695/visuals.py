@@ -172,13 +172,14 @@ def forecast_chart():
     y = alt.Y('COUNT(CREATED)'),
     y2 = alt.Y('Predictions:Q')
     )
-
-    base = alt.Chart(df.reset_index()).encode(x='CREATED')
+    plot_title = alt.TitleParams("Historical and Predicted Tweet Counts", subtitle=["Ten day ARIMA prediction of tweet volumes"])
+    base = alt.Chart(df.reset_index(), title = plot_title).encode(alt.X('CREATED', title = "Tweet Date"))
 
     lines = alt.layer(
-        base.mark_line(color='black').encode(y='COUNT(CREATED)'),
-        base.mark_line(color='orange').encode(y='Predictions:Q')
+        base.mark_line(color='black').encode(alt.Y('COUNT(CREATED)')),
+        base.mark_line(color='orange').encode(alt.Y('Predictions:Q', title = "Tweet Count"))
     )
+    
     save(lines, "output_data/predict_lines.html")
 
 def interactive_tweet_trends():
