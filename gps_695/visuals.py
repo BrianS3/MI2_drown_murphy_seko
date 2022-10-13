@@ -130,6 +130,9 @@ def streamgraph():
     df = pd.read_sql_query(query, cnx)
 
     alt.data_transformers.disable_max_rows()
+    
+    colors = ['#857f83',  '#143642',  '#0f8b8d',  '#7e935b',  '#ec9a29',  '#a8201a', '#526797']
+    emos = ['Neutral', 'Mixed', 'Surprise', 'Happy', 'Fear', 'Angry', 'Sad']
 
     chart = alt.Chart(df, title=f"Search Terms: {np.unique(df['SEARCH_TERM'])}").mark_area().encode(
         alt.X('CREATED:T',
@@ -138,7 +141,8 @@ def streamgraph():
         alt.Y('count(OVERALL_EMO):N', stack='center',
              axis=alt.Axis(domain=False, grid=False, tickSize=0)),
         alt.Color('OVERALL_EMO:N',
-            scale=alt.Scale(scheme='tableau10')
+            scale=alt.Scale(domain=emos,
+                            range=colors),
         )
     ).properties(height=500, width=800).configure_view(strokeOpacity=0)
 
@@ -191,6 +195,9 @@ def emo_choropleth():
 
     search_term_results = pd.read_sql_query(search_term_query, cnx)
 
+    colors = {'Neutral':'#857f83',  'Mixed':'#143642',  'Surprise':'#0f8b8d',  'Happy':'#7e935b',
+              'Fear':'#ec9a29',  'Angry':'#a8201a', 'Sad':'#526797'}
+    
     most_common_list = []
     for state in df['STATE_ABBR']:
         state_df = df.where(df.STATE_ABBR == state).dropna()
@@ -205,7 +212,7 @@ def emo_choropleth():
                         locationmode="USA-states", 
                         scope="usa",
                         color='OVERALL_EMO',
-                        color_discrete_sequence=px.colors.qualitative.T10,
+                        color_discrete_map=colors,
                         )
 
     fig.update_layout(
@@ -332,6 +339,8 @@ def interactive_tweet_trends():
     group by created, overall_emo;
     """, cnx)
 
+    alph_colors = ['#a8201a', '#ec9a29', '#7e935b', '#143642', '#857f83', '#526797', '#0f8b8d']
+    
     brush = alt.selection_interval(encodings=['x'])
     colorConditionDC = alt.condition(brush, alt.value('#2182bd'), alt.value('gray'))
 
@@ -358,7 +367,7 @@ def interactive_tweet_trends():
     i_sent_line = sent_line.transform_filter(brush).resolve_scale(y='shared').transform_filter(selection)
 
     out = (i_volume & (i_sent_line | make_selector)).configure_range(
-        category={'scheme': 'tableau10'}
+        category=alt.RangeScheme(alph_colors)
     ).properties(
         title={
             "text": ["Tweet Volume and Sentiment Over Time"],
@@ -405,11 +414,14 @@ def animated_emo_choropleth():
     ORDER BY CREATED, STATE_ABBR;
     """, cnx)
 
+    colors = {'Neutral':'#857f83',  'Mixed':'#143642',  'Surprise':'#0f8b8d',  'Happy':'#7e935b',
+              'Fear':'#ec9a29',  'Angry':'#a8201a', 'Sad':'#526797'}
+        
     fig = px.choropleth(df,
                         locations='STATE_ABBR',
                         locationmode="USA-states",
                         color='OVERALL_EMO',
-                        color_continuous_scale="Viridis_r",
+                        color_discrete_map=colors,
                         scope="usa",
                         animation_frame='CREATED')
     fig.layout.updatemenus[0].buttons[0].args[1]['frame']['duration'] = 1000
