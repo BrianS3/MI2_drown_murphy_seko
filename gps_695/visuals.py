@@ -41,7 +41,21 @@ def generate_report():
 
     results3 = db_return3.fetchall()
 
+    db_return4 = cnx.execute("""
+        SELECT
+        COUNT(OVERALL_EMO) AS OE_COUNT
+        ,OVERALL_EMO
+        FROM TWEET_TEXT
+        GROUP BY OVERALL_EMO
+        ORDER BY COUNT(OVERALL_EMO) DESC""")
+
+    results4 = db_return4.fetchall()
+    results4.sort(reverse=True)
+    result4_vals = [x[0] for x in results4]
+    result4_mean = round(sum(result4_vals)/len(result4_vals),2)
+
     f = open('Sentiment_Report.html', 'w')
+
     html_template = f"""
     <h1>Tweet Sentiment Report</h1>
     <p>
@@ -54,6 +68,11 @@ def generate_report():
     Total Tweets Obtained: {results2[0][0]}
     <br>
     Average Tweets per Day: {results3[0][0]}
+    <br>
+    <br>
+    Overall, users felt mostly {results4[0][1]} about the topic, with a total tweet count of {results4[0][0]}. 
+    <br>
+    With average tweet count by sentiment being {result4_mean}, this is {round(results4[0][0]/result4_mean,2)*100}% above the mean.
     <br>
     <br>
     </p>
