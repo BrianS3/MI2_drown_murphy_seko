@@ -1,3 +1,78 @@
+def generate_report():
+    """
+    Generates report of tweet analysis.
+    :return: None, html file generates to working directory as Sentiment_Report.html
+    """
+    from gps_695 import visuals as v
+    from gps_695 import database as d
+
+    v.streamgraph()
+    v.hashtag_chart()
+    v.emo_choropleth()
+    v.forecast_chart()
+    v.interactive_tweet_trends()
+
+    cnx = d.connect_to_database()
+    db_return1 = cnx.execute("""
+    SELECT DISTINCT 
+    SEARCH_TERM 
+    ,MAX(CREATED) AS END_DATE
+    ,MIN(CREATED) AS START_DATE
+    FROM TWEET_TEXT
+    GROUP BY SEARCH_TERM
+    ORDER BY END_DATE DESC
+    LIMIT 1
+    """)
+    results = db_return1.fetchall()
+
+    db_return2 = cnx.execute("""
+        SELECT COUNT(TWEET_ID) FROM TWEET_TEXT
+        """)
+    results2 = db_return2.fetchall()
+
+    db_return3 = cnx.execute("""
+    SELECT
+    ROUND(AVG(AVG_T)) AS AVG_TWEET_P_DAY
+    FROM (
+        SELECT DISTINCT 
+        COUNT(TWEET_ID)/COUNT(DISTINCT SEARCH_TERM) AS AVG_T
+        FROM TWEET_TEXT
+        GROUP BY CREATED) X """)
+
+    results3 = db_return3.fetchall()
+
+    f = open('Sentiment_Report.html', 'w')
+    html_template = f"""
+    <h1>Tweet Sentiment Report</h1>
+    <p>
+    Search Term: {results[0][0]}
+    <br>
+    Start Date: {results[0][2]}
+    <br>
+    End Date: {results[0][1]}
+    <br>
+    Total Tweets Obtained: {results2[0][0]}
+    <br>
+    Average Tweets per Day: {results3[0][0]}
+    <br>
+    <br>
+    </p>
+    <p><img alt="" src="output_data/emo_choropleth.png" border="0"/></p>
+    <br>
+    <iframe src="output_data/streamgraph.html" width="1000" height="600" frameBorder="0">></iframe>
+    <br>
+    <iframe src="output_data/hashtag_chart.html" width="850" height="400" frameBorder="0">></iframe>
+    <br>
+    <iframe src="output_data/interactive_tweet_trends.html" width="950" height="700" frameBorder="0">></iframe>
+    <br>
+    <br>
+    <iframe src="output_data/forecast_chart.html" width="950" height="750" frameBorder="0">></iframe>
+    """
+
+    f.write(html_template)
+    f.close()
+
+
 def check_trend(*args):
     """
     Uses google trend to build a simple line chart of the current trend by keyword/phrase
@@ -43,7 +118,7 @@ def streamgraph():
         alt.Color('OVERALL_EMO:N',
             scale=alt.Scale(scheme='tableau10')
         )
-    ).properties(width=500).configure_view(strokeOpacity=0)
+    ).properties(height=500, width=800).configure_view(strokeOpacity=0)
 
     save(chart, "output_data/streamgraph.html")
 
@@ -90,7 +165,7 @@ def emo_choropleth():
                         )
 
     fig.update_layout(
-          title_text = f"Overall Emotion by State (of users with location listed), Search Terms: {np.unique(df['SEARCH_TERM'])}",
+          title_text = f"Overall Emotion by State (of users with location listed) <br> Search Terms: {str(df['SEARCH_TERM'].unique()).replace('[', '').replace(']','')}",
           title_font_size = 14,
           title_font_color="black", 
           title_x=0.45, 
@@ -106,6 +181,7 @@ def hashtag_chart():
     '''
     import altair as alt
     import pandas as pd
+    import numpy as np
     from altair_saver import save
     from collections import Counter
     from gps_695 import database as d
@@ -130,7 +206,7 @@ def hashtag_chart():
         y = alt.Y('index:N', sort='-x', axis=alt.Axis(grid=False, title='hashtag')),
         x = alt.X('count:Q', axis=alt.Axis(grid=False)),
         color = alt.Color('count:Q',scale=alt.Scale(scheme="goldorange"), legend=None)
-    ).properties(height=175, width=250)
+    ).properties(height=300, width=500)
     
     save(bars, "output_data/hashtag_chart.html")
     
@@ -178,7 +254,7 @@ def forecast_chart():
     lines = alt.layer(
         base.mark_line(color='black').encode(alt.Y('COUNT(CREATED)')),
         base.mark_line(color='orange').encode(alt.Y('Predictions:Q', title = "Tweet Count"))
-    )
+    ).properties(height = 500, width = 800)
     save(lines, "output_data/forecast_chart.html")
 
 def interactive_tweet_trends():
@@ -188,6 +264,7 @@ def interactive_tweet_trends():
     """
     import pandas as pd
     import altair as alt
+    from altair_saver import save
     from gps_695 import database as d
 
     cnx = d.connect_to_database()
