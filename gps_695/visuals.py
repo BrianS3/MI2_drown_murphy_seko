@@ -270,7 +270,9 @@ def forecast_chart():
     cnx = d.connect_to_database()
 
     query = """
-    SELECT COUNT(CREATED), CREATED FROM TWEET_TEXT
+    SELECT COUNT(TWEET_ID)/COUNT(DISTINCT SEARCH_TERM) AS COUNT, 
+    CREATED 
+    FROM TWEET_TEXT
     GROUP BY CREATED"""
     df = pd.read_sql_query(query, cnx)
     df.drop(df.tail(1).index,inplace=True)
@@ -279,7 +281,7 @@ def forecast_chart():
     for i in range(10):
         x_dates.append(df['CREATED'].max() + datetime.timedelta(days=i+1))
 
-    ARIMAmodel = ARIMA(df['COUNT(CREATED)'], order = (2, 0, 2))
+    ARIMAmodel = ARIMA(df['COUNT'], order = (2, 0, 2))
     ARIMAmodel = ARIMAmodel.fit()
     y_pred = ARIMAmodel.get_forecast(10)
     y_pred_df = y_pred.conf_int(alpha = 0.05)
@@ -289,14 +291,14 @@ def forecast_chart():
     df = pd.concat([df,y_pred_df])
     lines = alt.Chart(df).mark_line().encode(
     x='CREATED',
-    y = alt.Y('COUNT(CREATED)'),
+    y = alt.Y('COUNT'),
     y2 = alt.Y('Predictions:Q')
     )
     plot_title = alt.TitleParams("Historical and Predicted Tweet Counts", subtitle=["Ten day ARIMA prediction of tweet volumes"])
     base = alt.Chart(df.reset_index(), title = plot_title).encode(alt.X('CREATED', title = "Tweet Date"))
 
     lines = alt.layer(
-        base.mark_line(color='black').encode(alt.Y('COUNT(CREATED)')),
+        base.mark_line(color='black').encode(alt.Y('COUNT')),
         base.mark_line(color='orange').encode(alt.Y('Predictions:Q', title = "Tweet Count"))
     ).properties(height = 500, width = 800)
     save(lines, "output_data/forecast_chart.html")
