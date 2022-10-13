@@ -144,9 +144,6 @@ def emo_choropleth():
     USING (STATE_ID);"""
     df = pd.read_sql_query(query, cnx)
 
-    df = df.where(df.OVERALL_EMO != 'Mixed').dropna()
-    df = df.where(df.OVERALL_EMO != 'Neutral').dropna()
-    
     most_common_list = []
     for state in df['STATE_ABBR']:
         state_df = df.where(df.STATE_ABBR == state).dropna()
