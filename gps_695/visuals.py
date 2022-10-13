@@ -1,3 +1,26 @@
+def generate_report():
+    from gps_695 import visuals as v
+
+    v.streamgraph()
+    v.hashtag_chart()
+    v.emo_choropleth()
+    v.forecast_chart()
+    v.interactive_tweet_trends()
+
+    f = open('Sentiment_Report.html', 'w')
+    html_template = """
+    <h1>This is a test Markdown File</h1>
+    <p>Howdy dooody!!!</p>
+    <p><img alt="" src="output_data/emo_choropleth.png" /></p>
+    <iframe src="output_data/hashtag_chart.html" width="600" height="300">></iframe>
+    <br>
+    <iframe src="output_data/interactive_tweet_trends.html" width="950" height="750">></iframe>
+    """
+
+    f.write(html_template)
+    f.close()
+
+
 def check_trend(*args):
     """
     Uses google trend to build a simple line chart of the current trend by keyword/phrase
@@ -106,6 +129,7 @@ def hashtag_chart():
     '''
     import altair as alt
     import pandas as pd
+    import numpy as np
     from altair_saver import save
     from collections import Counter
     from gps_695 import database as d
@@ -188,6 +212,7 @@ def interactive_tweet_trends():
     """
     import pandas as pd
     import altair as alt
+    from altair_saver import save
     from gps_695 import database as d
 
     cnx = d.connect_to_database()
