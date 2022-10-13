@@ -25,6 +25,8 @@ setup(name='gps_695',
             'pandas',
             'numpy',
             'tqdm',
-            're'
+            're',
+            'statsmodel',
+            'datetime'
       ],
       zip_safe=False)
