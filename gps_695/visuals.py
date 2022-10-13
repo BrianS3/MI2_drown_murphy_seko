@@ -45,15 +45,17 @@ def generate_report():
     html_template = f"""
     <h1>Tweet Sentiment Report</h1>
     <p>
-    Search Term:{results[0][0]}
+    Search Term: {results[0][0]}
     <br>
-    Start Date:{results[0][2]}
+    Start Date: {results[0][2]}
     <br>
-    End Date:{results[0][1]}
+    End Date: {results[0][1]}
     <br>
-    Total Tweets Obtained:{results2[0][0]}
+    Total Tweets Obtained: {results2[0][0]}
     <br>
-    Average Tweets per Day:{results3[0][0]}
+    Average Tweets per Day: {results3[0][0]}
+    <br>
+    <br>
     </p>
     <p><img alt="" src="output_data/emo_choropleth.png" border="0"/></p>
     <br>
@@ -163,7 +165,7 @@ def emo_choropleth():
                         )
 
     fig.update_layout(
-          title_text = f"Overall Emotion by State (of users with location listed), Search Terms: {np.unique(df['SEARCH_TERM'])}",
+          title_text = f"Overall Emotion by State (of users with location listed) <br> Search Terms: {str(df['SEARCH_TERM'].unique()).replace('[', '').replace(']','')}",
           title_font_size = 14,
           title_font_color="black", 
           title_x=0.45, 
