@@ -11,6 +11,7 @@ def generate_report():
     v.emo_choropleth()
     v.forecast_chart()
     v.interactive_tweet_trends()
+    v.animated_emo_choropleth()
 
     cnx = d.connect_to_database()
     db_return1 = cnx.execute("""
@@ -41,6 +42,19 @@ def generate_report():
 
     results3 = db_return3.fetchall()
 
+    db_return4 = cnx.execute("""
+        SELECT
+        COUNT(OVERALL_EMO) AS OE_COUNT
+        ,OVERALL_EMO
+        FROM TWEET_TEXT
+        GROUP BY OVERALL_EMO
+        ORDER BY COUNT(OVERALL_EMO) DESC""")
+
+    results4 = db_return4.fetchall()
+    results4.sort(reverse=True)
+    result4_vals = [x[0] for x in results4]
+    result4_mean = round(sum(result4_vals)/len(result4_vals),2)
+
     f = open('Sentiment_Report.html', 'w')
     html_template = f"""
     <h1>Tweet Sentiment Report</h1>
@@ -56,8 +70,15 @@ def generate_report():
     Average Tweets per Day: {results3[0][0]}
     <br>
     <br>
+    Overall, users felt mostly {results4[0][1]} about the topic, with a total tweet count of {results4[0][0]}. 
+    <br>
+    With average tweet count by sentiment being {result4_mean}, this is {round(results4[0][0]/result4_mean)*100}% above the mean.
+    <br>
+    <br>
     </p>
     <p><img alt="" src="output_data/emo_choropleth.png" border="0"/></p>
+    <br>
+    <iframe src="output_data/animated_emo_choropleth.html" width="1000" height="600" frameBorder="0">></iframe>
     <br>
     <iframe src="output_data/streamgraph.html" width="1000" height="600" frameBorder="0">></iframe>
     <br>
@@ -68,6 +89,7 @@ def generate_report():
     <br>
     <iframe src="output_data/forecast_chart.html" width="950" height="750" frameBorder="0">></iframe>
     """
+
 
     f.write(html_template)
     f.close()
@@ -137,16 +159,38 @@ def emo_choropleth():
     cnx = d.connect_to_database()
 
     query = """
-    SELECT * FROM TWEET_TEXT
-    JOIN AUTHOR_LOCATION
-    USING (AUTHOR_ID)
-    JOIN US_STATES
-    USING (STATE_ID);"""
+    SELECT
+    STATE_ABBR,
+    CASE 
+    WHEN COUNT(OVERALL_EMO) >1 
+    THEN 'Mixed' 
+    ELSE OVERALL_EMO END AS OVERALL_EMO
+    FROM (
+        SELECT 
+        T.CREATED,
+        T.OVERALL_EMO,
+        U.STATE_ABBR
+        FROM TWEET_TEXT T
+        JOIN AUTHOR_LOCATION A ON T.AUTHOR_ID = A.AUTHOR_ID
+        JOIN US_STATES U ON U.STATE_ID = A.STATE_ID
+        GROUP BY
+        T.CREATED,U.STATE_ABBR, T.OVERALL_EMO
+        ORDER BY 
+        T.CREATED, U.STATE_ABBR
+        ) X
+    GROUP BY STATE_ABBR
+    ORDER BY STATE_ABBR"""
     df = pd.read_sql_query(query, cnx)
 
-    df = df.where(df.OVERALL_EMO != 'Mixed').dropna()
-    df = df.where(df.OVERALL_EMO != 'Neutral').dropna()
-    
+    search_term_query = """
+            SELECT 
+            DISTINCT T.SEARCH_TERM
+            FROM TWEET_TEXT T
+            JOIN AUTHOR_LOCATION A ON T.AUTHOR_ID = A.AUTHOR_ID
+            JOIN US_STATES U ON U.STATE_ID = A.STATE_ID;"""
+
+    search_term_results = pd.read_sql_query(search_term_query, cnx)
+
     most_common_list = []
     for state in df['STATE_ABBR']:
         state_df = df.where(df.STATE_ABBR == state).dropna()
@@ -165,7 +209,7 @@ def emo_choropleth():
                         )
 
     fig.update_layout(
-          title_text = f"Overall Emotion by State (of users with location listed) <br> Search Terms: {str(df['SEARCH_TERM'].unique()).replace('[', '').replace(']','')}",
+          title_text = f"Overall Emotion by State (of users with location listed) <br> Search Terms: {str(search_term_results['SEARCH_TERM'].unique()).replace('[', '').replace(']','')}",
           title_font_size = 14,
           title_font_color="black", 
           title_x=0.45, 
@@ -322,3 +366,50 @@ def interactive_tweet_trends():
     )
 
     save(out, "output_data/interactive_tweet_trends.html")
+
+def animated_emo_choropleth():
+    """
+    Creates an animated choropleth that plays frames from start date to end date.
+    :return: None, html files saved to output_data
+    """
+    import pandas as pd
+    import plotly.express as px
+    from gps_695 import database as d
+
+    cnx = d.connect_to_database()
+
+    df = pd.read_sql_query("""
+    SELECT
+    CREATED,
+    STATE_ABBR,
+    CASE 
+    WHEN COUNT(OVERALL_EMO) >1 
+    THEN 'Mixed' 
+    ELSE OVERALL_EMO END AS OVERALL_EMO
+    FROM (
+    	SELECT 
+    	T.CREATED,
+    	T.OVERALL_EMO,
+    	U.STATE_ABBR
+    	FROM TWEET_TEXT T
+    	JOIN AUTHOR_LOCATION A ON T.AUTHOR_ID = A.AUTHOR_ID
+    	JOIN US_STATES U ON U.STATE_ID = A.STATE_ID
+    	GROUP BY
+    	T.CREATED,U.STATE_ABBR, T.OVERALL_EMO
+    	ORDER BY 
+    	T.CREATED, U.STATE_ABBR
+        ) X
+    GROUP BY CREATED, STATE_ABBR
+    ORDER BY CREATED, STATE_ABBR;
+    """, cnx)
+
+    fig = px.choropleth(df,
+                        locations='STATE_ABBR',
+                        locationmode="USA-states",
+                        color='OVERALL_EMO',
+                        color_continuous_scale="Viridis_r",
+                        scope="usa",
+                        animation_frame='CREATED')
+    fig.layout.updatemenus[0].buttons[0].args[1]['frame']['duration'] = 1000
+
+    fig.write_html('output_data/animated_emo_choropleth.html')
