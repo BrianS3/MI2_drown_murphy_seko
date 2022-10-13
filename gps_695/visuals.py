@@ -222,7 +222,7 @@ def emo_choropleth():
           title_x=0.45, 
              )
 
-    fig.write_image('output_data/emo_choropleth.html')
+   fig.write_html('output_data/emo_choropleth.html')
 
 
 def hashtag_chart():
