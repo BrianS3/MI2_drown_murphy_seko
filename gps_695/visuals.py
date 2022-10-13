@@ -221,8 +221,7 @@ def emo_choropleth():
           title_font_color="black", 
           title_x=0.45, 
              )
-
-   fig.write_html('output_data/emo_choropleth.html')
+    fig.write_html('output_data/emo_choropleth.html')
 
 
 def hashtag_chart():
