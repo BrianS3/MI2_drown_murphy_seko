@@ -131,8 +131,8 @@ def streamgraph():
 
     alt.data_transformers.disable_max_rows()
     
-    colors = ['#857f83',  '#143642',  '#0f8b8d',  '#7e935b',  '#ec9a29',  '#a8201a', '#526797']
-    emos = ['Neutral', 'Mixed', 'Surprise', 'Happy', 'Fear', 'Angry', 'Sad']
+    colors = ['#a8201a', '#ec9a29', '#7e935b', '#143642', '#857f83', '#526797', '#0f8b8d']
+    emos = [ 'Angry', 'Fear', 'Happy', 'Mixed', 'Neutral', 'Sad', 'Surprise']
 
     chart = alt.Chart(df, title=f"Search Terms: {np.unique(df['SEARCH_TERM'])}").mark_area().encode(
         alt.X('CREATED:T',
@@ -195,8 +195,8 @@ def emo_choropleth():
 
     search_term_results = pd.read_sql_query(search_term_query, cnx)
 
-    colors = {'Neutral':'#857f83',  'Mixed':'#143642',  'Surprise':'#0f8b8d',  'Happy':'#7e935b',
-              'Fear':'#ec9a29',  'Angry':'#a8201a', 'Sad':'#526797'}
+    colors = {'Angry':'#a8201a', 'Fear':'#ec9a29', 'Happy':'#7e935b', 'Mixed':'#143642',
+              'Neutral':'#857f83', 'Sad':'#526797', 'Surprise':'#0f8b8d'}
     
     most_common_list = []
     for state in df['STATE_ABBR']:
