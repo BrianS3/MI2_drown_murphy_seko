@@ -370,37 +370,34 @@ def animated_emo_choropleth():
     cnx = d.connect_to_database()
 
     df = pd.read_sql_query("""
-    SELECT
-    CREATED,
-    STATE_ABBR,
-    CASE 
-    WHEN COUNT(OVERALL_EMO) >1 
-    THEN 'Mixed' 
-    ELSE OVERALL_EMO END AS OVERALL_EMO
-    FROM (
-    	SELECT 
-    	T.CREATED,
-    	T.OVERALL_EMO,
-    	U.STATE_ABBR
-    	FROM TWEET_TEXT T
-    	JOIN AUTHOR_LOCATION A ON T.AUTHOR_ID = A.AUTHOR_ID
-    	JOIN US_STATES U ON U.STATE_ID = A.STATE_ID
-    	GROUP BY
-    	T.CREATED,U.STATE_ABBR, T.OVERALL_EMO
-    	ORDER BY 
-    	T.CREATED, U.STATE_ABBR
-        ) X
-    GROUP BY CREATED, STATE_ABBR
-    ORDER BY CREATED, STATE_ABBR;
-    """, cnx)
+    SELECT * FROM TWEET_TEXT
+    JOIN AUTHOR_LOCATION
+    USING (AUTHOR_ID)
+    JOIN US_STATES
+    USING (STATE_ID)""", cnx)
 
-    colors = {'Neutral':'#857f83',  'Mixed':'#143642',  'Surprise':'#0f8b8d',  'Happy':'#7e935b',
-              'Fear':'#ec9a29',  'Angry':'#a8201a', 'Sad':'#526797'}
+    most_common_list = []
+    for state in df['STATE_ABBR']:
+        state_df = df.where(df.STATE_ABBR == state).dropna()
+        counter = Counter(state_df['OVERALL_EMO'])
+        try:
+            if counter.most_common()[0][1] == counter.most_common()[1][1]:
+                most_common_list.append('Mixed')
+            else:
+                most_common_list.append(counter.most_common()[0][0])
+        except IndexError:
+            most_common_list.append(counter.most_common()[0][0])
+
+    df['MOST_COMMON_EMO'] = most_common_list
+    df = df.sort_values('MOST_COMMON_EMO')
+    
+    colors = {'Angry':'#a8201a', 'Fear':'#ec9a29', 'Happy':'#7e935b', 'Mixed':'#143642',
+              'Neutral':'#857f83', 'Sad':'#526797', 'Surprise':'#0f8b8d'}
         
     fig = px.choropleth(df,
                         locations='STATE_ABBR',
                         locationmode="USA-states",
-                        color='OVERALL_EMO',
+                        color='MOST_COMMON_EMO',
                         color_discrete_map=colors,
                         scope="usa",
                         animation_frame='CREATED')
