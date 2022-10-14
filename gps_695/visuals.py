@@ -364,6 +364,7 @@ def animated_emo_choropleth():
     :return: None, html files saved to output_data
     """
     import pandas as pd
+    from collections import Counter
     import plotly.express as px
     from gps_695 import database as d
 
