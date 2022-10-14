@@ -76,7 +76,7 @@ def generate_report():
     <br>
     <br>
     </p>
-    <p><img alt="" src="output_data/emo_choropleth.html" border="0"/></p>
+    <iframe src="output_data/emo_choropleth.html" width="1000" height="600" frameBorder="0">></iframe>
     <br>
     <iframe src="output_data/animated_emo_choropleth.html" width="1000" height="600" frameBorder="0">></iframe>
     <br>
