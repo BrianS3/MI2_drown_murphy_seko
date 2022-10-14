@@ -163,37 +163,12 @@ def emo_choropleth():
     cnx = d.connect_to_database()
 
     query = """
-    SELECT
-    STATE_ABBR,
-    CASE 
-    WHEN COUNT(OVERALL_EMO) >1 
-    THEN 'Mixed' 
-    ELSE OVERALL_EMO END AS OVERALL_EMO
-    FROM (
-        SELECT 
-        T.CREATED,
-        T.OVERALL_EMO,
-        U.STATE_ABBR
-        FROM TWEET_TEXT T
-        JOIN AUTHOR_LOCATION A ON T.AUTHOR_ID = A.AUTHOR_ID
-        JOIN US_STATES U ON U.STATE_ID = A.STATE_ID
-        GROUP BY
-        T.CREATED,U.STATE_ABBR, T.OVERALL_EMO
-        ORDER BY 
-        T.CREATED, U.STATE_ABBR
-        ) X
-    GROUP BY STATE_ABBR
-    ORDER BY STATE_ABBR"""
+    SELECT * FROM TWEET_TEXT
+    JOIN AUTHOR_LOCATION
+    USING (AUTHOR_ID)
+    JOIN US_STATES
+    USING (STATE_ID)"""
     df = pd.read_sql_query(query, cnx)
-
-    search_term_query = """
-            SELECT 
-            DISTINCT T.SEARCH_TERM
-            FROM TWEET_TEXT T
-            JOIN AUTHOR_LOCATION A ON T.AUTHOR_ID = A.AUTHOR_ID
-            JOIN US_STATES U ON U.STATE_ID = A.STATE_ID;"""
-
-    search_term_results = pd.read_sql_query(search_term_query, cnx)
 
     colors = {'Angry':'#a8201a', 'Fear':'#ec9a29', 'Happy':'#7e935b', 'Mixed':'#143642',
               'Neutral':'#857f83', 'Sad':'#526797', 'Surprise':'#0f8b8d'}
@@ -202,7 +177,13 @@ def emo_choropleth():
     for state in df['STATE_ABBR']:
         state_df = df.where(df.STATE_ABBR == state).dropna()
         counter = Counter(state_df['OVERALL_EMO'])
-        most_common_list.append(counter.most_common()[0][0])
+        try:
+            if counter.most_common()[0][1] == counter.most_common()[1][1]:
+                most_common_list.append('Mixed')
+            else:
+                most_common_list.append(counter.most_common()[0][0])
+        except IndexError:
+            most_common_list.append(counter.most_common()[0][0])
 
     df['MOST_COMMON_EMO'] = most_common_list
     df = df.sort_values('MOST_COMMON_EMO')
@@ -216,7 +197,7 @@ def emo_choropleth():
                         )
 
     fig.update_layout(
-          title_text = f"Overall Emotion by State (of users with location listed) <br> Search Terms: {str(search_term_results['SEARCH_TERM'].unique()).replace('[', '').replace(']','')}",
+          title_text = f"Overall Emotion by State (of users with location listed) <br> Search Terms: {str(df['SEARCH_TERM'].unique())}",
           title_font_size = 14,
           title_font_color="black", 
           title_x=0.45, 
