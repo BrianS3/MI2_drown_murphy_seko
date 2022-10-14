@@ -243,11 +243,11 @@ def gridsearch(search_term):
 
         kw_list = n.get_associated_keywords(df, search_term, perc_in_words=perc_val.astype(float),
                                             alpha_W=alpha_val.astype(float), l1_ratio=l1_val.astype(int))
-
-        for k,v in kw_list.items():
-            file.write(f"{k.encode('utf8')}")
-            file.write("\n")
-        file.close()
+        if kw_list != 'Could not find associated topics.':
+            for k,v in kw_list.items():
+                file.write(f"{k.encode('utf8')}")
+                file.write("\n")
+            file.close()
 
         grid_search_results.update(kw_list)
 
