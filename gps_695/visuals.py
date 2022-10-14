@@ -192,12 +192,12 @@ def emo_choropleth():
                         locations='STATE_ABBR', 
                         locationmode="USA-states", 
                         scope="usa",
-                        color='OVERALL_EMO',
+                        color='MOST_COMMON_EMO',
                         color_discrete_map=colors,
                         )
 
     fig.update_layout(
-          title_text = f"Overall Emotion by State (of users with location listed) <br> Search Terms: {str(df['SEARCH_TERM'].unique())}",
+          title_text = f"Overall Emotion by State (of users with location listed) <br> Search Terms: {df['SEARCH_TERM'].unique()}",
           title_font_size = 14,
           title_font_color="black", 
           title_x=0.45, 
@@ -233,7 +233,7 @@ def hashtag_chart():
     hash_df.reset_index(inplace=True, drop=True)
 
 
-    bars = alt.Chart(hash_df, title=["Top Hashtags", f"Search Terms: {np.unique(df['SEARCH_TERM'])}"]).mark_bar().encode(
+    bars = alt.Chart(hash_df, title=["Top Hashtags", f"Search Terms: {df['SEARCH_TERM'].unique()}"]).mark_bar().encode(
         y = alt.Y('index:N', sort='-x', axis=alt.Axis(grid=False, title='hashtag')),
         x = alt.X('count:Q', axis=alt.Axis(grid=False)),
         color = alt.Color('count:Q',scale=alt.Scale(scheme="goldorange"), legend=None)
