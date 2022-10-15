@@ -155,7 +155,7 @@ def streamgraph():
             axis=alt.Axis(domain=False, grid=False, tickSize=0)
         ),
         alt.Y('count(OVERALL_EMO):N', stack='center',
-             axis=alt.Axis(domain=False, grid=False, tickSize=0)),
+             axis=None, title="", ),
         alt.Color('OVERALL_EMO:N',
             scale=alt.Scale(domain=emos,
                             range=colors),
