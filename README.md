@@ -1,27 +1,27 @@
-# [Package Name]
+# TweetERA
 
-[Package name] was designed to simplify how twitter data is analyzed. This package will create a mysql database and load twitter data to it. It will also perform a sentiment analysis on the tweets, encouraging users to run analyze new data frequently. Simply enter your keyword or phrase and let the package do the rest.
+TweetERA (Tweet Emotional Response Analysis) was designed to simplify how Twitter data is analyzed. This package will create a MySQL database and load Twitter data to it. It will also perform a sentiment analysis on the tweets, encouraging users to run analyze new data frequently. Simply enter your keyword or phrase and let the package do the rest.
 
 This package uses unsupervised machine learning to understand what words are associated with your keyword or phrase and add to your content search by pulling tweets by these related words. Tweets are pulled from the day before a run is executed up to 25 days prior.
 
-Supervised learning is used to expedite the package runtime. Only a subset of words are analyzed using [text2emotion](https://pypi.org/project/text2emotion/), the rest are predicted with [Support Vector Machines](https://scikit-learn.org/stable/modules/svm.html) via scikit learn
+Supervised learning is used to expedite the package runtime. Only a subset of words are analyzed using [text2emotion](https://pypi.org/project/text2emotion/), the rest are predicted with [Support Vector Machines](https://scikit-learn.org/stable/modules/svm.html) via scikit learn.
 
 # Getting Started
 
 ## Setting up MySQL
 To get started you need to first setup a MySQL database. If you have never done this, check out a [this tutorial](https://www.youtube.com/watch?v=u6vJEpRB_zc&t=1s) for more information.
 
-Once you have MySQL server installed, use the following commands to setup a blank database and user for access.
+Once you have MySQL server installed, use the following commands to set up a blank database and user for access.
 
-In mysql command line create user:
+In MySQL command line create user:
 
 ```create user 'your_user' identified by 'password';```
 
-Then setup the database:
+Then set up the database:
 
 ```Create database your_db;```
 
-Grant privilege's to user, these are the minimum required to run this package:
+Grant privileges to user; these are the minimum required to run this package:
 
 ```grant alter,create,delete,drop,index,insert,select,update, references on your_db.* to 'your_user';```
 
@@ -93,14 +93,14 @@ d.database_load("hello")
 
 ## Do several database loads
 
-If you set up multiple databases you can string together an analysis:
+If you set up multiple databases, you can string together an analysis:
 
 ```commandline
 from gps_695 import credentials as c
 from gps_695 import database as d
 
 databases = ['database_1','database_2','database_3','database_4']
-words = ['Iran', 'Nury Martinez', 'california drought', 'Putin']
+words = ['Iran', 'Nury Martinez', 'California drought', 'Putin']
 
 for i in range(4):
 
@@ -112,7 +112,7 @@ for i in range(4):
 
 ## Creating your database
 
-This package will automatically create a database when you choose to execute ```database.database_load("keyword")```, however you can do this process on your own at any time.
+This package will automatically create a database when you choose to execute ```database.database_load("keyword")```; however you can do this process on your own at any time.
 
 ```
 from gps_695 import credentials as c
@@ -136,7 +136,7 @@ d.load_tweets("hello", '2020-01-01', '2020-02-01', 50)
 
 ## Database connections
 
-If you wish to manually connect to your database and extract data you can do so as followed:
+If you wish to manually connect to your database and extract data you can do so as follows:
 
 ```
 from gps_695 import database as d
@@ -153,7 +153,7 @@ df = pd.read_sql_query(query, cnx)
 # Analyzing your data
 
 ## Checking Pytrends
-This package has a feature that allows you to find out if a specific term or phrase is trending before executing a full run. Calling check_trend will display an analysis from google trends for the past 12 months. Google trends uses twitter as a resource, and this may help you evaluate the right keyword or phrase to run for your analysis.
+This package has a feature that allows you to find out if a specific term or phrase is trending before executing a full run. Calling check_trend will display an analysis from Google Trends for the past 12 months. Google Trends uses Twitter as a resource, and this may help you evaluate the right keyword or phrase to run for your analysis.
 
 ```commandline
 from gps_695 import visuals as v
@@ -176,13 +176,13 @@ v.check_trend("hello", "goodbye", "nice to meet you") #or put in multiple words
 
 3) Why did you choose MySQL? "X" is so much better...
 
-    Because I wrote this package and you didn't. Jokes aside, MySQL was chosen for simplicity and ease of setup. Future iterations of this package may include more connectors, but for now MySQL was the simplest choice in our opinion to get you moving quickly. MySQL had no obvious benefits of Maria DB, Postgres, or any other open source database software.
+    Because I wrote this package and you didn't. Jokes aside, MySQL was chosen for simplicity and ease of setup. Future iterations of this package may include more connectors, but for now MySQL was the simplest choice in our opinion to get you moving quickly. MySQL had no obvious benefits over Maria DB, Postgres, or any other open source database software.
 
 # Errors
 
 Common errors that you may encounter:
 
-1) Users may experience issues with the NLKT library. Corpora needed to process text may not be properly installed.
+1) Users may experience issues with the NLTK library. Corpora needed to process text may not be properly installed.
 
     See https://www.nltk.org/data.html for more information to find instruction on how to download the correct corpus. The traceback message will contain the missing file, such as:
     "Resource omw-1.4 not found."
@@ -199,6 +199,6 @@ Common errors that you may encounter:
     ```
 
 
-    If you experience this error nest your code under
+    If you experience this error, nest your code under
 
     ```if __name__ == "__main__":```
