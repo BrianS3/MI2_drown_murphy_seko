@@ -451,17 +451,23 @@ def emotion_by_div_reg():
 
     for e in df['OVERALL_EMO'].unique():
         df_div = df[df['OVERALL_EMO'] == e]
-        divisions = alt.Chart(df_div).mark_bar(color='#2182bd').encode(
+        divisions = alt.Chart(df_div).mark_bar().encode(
             y=alt.Y('DIVISION', title=''),
-            x=alt.X('count_norm:Q', title='Tweet Count', scale=alt.Scale(domain=[0, 1]))
+            x=alt.X('count_norm:Q', title='Tweet Count', scale=alt.Scale(domain=[0, 1])),
+            color = alt.Color('OVERALL_EMO:N',
+                  scale=alt.Scale(domain=emos,
+                                  range=colors)),
         ).properties(title=f'{e}')
         div_charts.append(divisions)
 
     for e in df['OVERALL_EMO'].unique():
         df_div = df[df['OVERALL_EMO'] == e]
-        regions = alt.Chart(df_div).mark_bar(color='#2182bd').encode(
+        regions = alt.Chart(df_div).mark_bar().encode(
             y=alt.Y('REGION', title=''),
-            x=alt.X('count_norm:Q', title='', scale=alt.Scale(domain=[0, 1]))
+            x=alt.X('count_norm:Q', title='', scale=alt.Scale(domain=[0, 1])),
+            color = alt.Color('OVERALL_EMO:N',
+                  scale=alt.Scale(domain=emos,
+                                  range=colors)),
         ).properties(title=f'{e}')
         reg_charts.append(regions)
 
