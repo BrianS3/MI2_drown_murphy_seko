@@ -302,7 +302,7 @@ def forecast_chart():
 
     lines = alt.layer(
         base.mark_line(color='black').encode(alt.Y('COUNT')),
-        base.mark_line(color='orange').encode(alt.Y('Predictions:Q', title = "Average Tweet Count"))
+        base.mark_line(color='purple').encode(alt.Y('Predictions:Q', title = "Average Tweet Count"))
     ).properties(height = 500, width = 800)
     save(lines, "output_data/forecast_chart.html")
 
