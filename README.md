@@ -183,9 +183,13 @@ v.check_trend("hello", "goodbye", "nice to meet you") #or put in multiple words
 
     Because we wrote this package and you didn't. Jokes aside, MySQL was chosen for simplicity and ease of setup. Future iterations of this package may include more connectors, but for now MySQL was the simplest choice in our opinion to get you moving quickly. MySQL had no obvious benefits over Maria DB, Postgres, or any other open source database software.
     
-4) Will Tweetera work if I don't have research level access to Twitter API v2?
+4) Will TweetERA work if I don't have research level access to Twitter API v2?
 
     No.
+    
+5) Should I use the results of TweetERA to make executive decisions?
+
+    No! Tweet emotion analysis is a fickle thing, and far from perfect. TweetERA analyses should not be used to inform policy, public safety, or other important decisions.
 
 # Errors
 
