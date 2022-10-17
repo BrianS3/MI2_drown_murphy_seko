@@ -3,16 +3,22 @@ def generate_report():
     Generates report of tweet analysis.
     :return: None, html file generates to working directory as Sentiment_Report.html
     """
+    import warnings
+    warnings.simplefilter(action='ignore') #added due to known bug in current pandas version
+    import os
     from gps_695 import visuals as v
     from gps_695 import database as d
 
+    print("Generating charts...")
     v.streamgraph()
     v.hashtag_chart()
     v.emo_choropleth()
     v.forecast_chart()
     v.interactive_tweet_trends()
     v.animated_emo_choropleth()
-
+    v.emotion_by_div_reg()
+    print("Charts created")
+    print("Compiling report")
     cnx = d.connect_to_database()
     db_return1 = cnx.execute("""
     SELECT DISTINCT 
@@ -70,30 +76,40 @@ def generate_report():
     Average Tweets per Day: {results3[0][0]}
     <br>
     <br>
-    Overall, users felt mostly {results4[0][1]} about the topic, with a total tweet count of {results4[0][0]}. 
+    Overall, users felt mostly <b>{results4[0][1]}</b> about the topic, with a total tweet count of {results4[0][0]}. 
     <br>
-    With average tweet count by sentiment being {result4_mean}, this is {round(results4[0][0]/result4_mean)*100}% above the mean.
+    With average tweet count by sentiment being {result4_mean}, this is <i>{round(results4[0][0]/result4_mean)*100}%</i> above the mean.
     <br>
     <br>
     </p>
+    <iframe src="output_data/streamgraph.html" width="1000" height="650" frameBorder="0">></iframe>
+    <br>
+    <iframe src="output_data/interactive_tweet_trends.html" width="950" height="700" frameBorder="0">></iframe>
+    <br>
+    <iframe src="output_data/forecast_chart.html" width="950" height="750" frameBorder="0">></iframe>
+    <br>
+    <iframe src="output_data/hashtag_chart.html" width="850" height="400" frameBorder="0">></iframe>
+    <br>
+    <br>
+    This data represents users who entered enough location data to identify their home state.
+    <br> 
+    This data does not reflect the location of a user at the time they created a tweet.
+    <br>
+    You will notice that tweet volume is lower in this section.
+    <br>
+    <br>
     <iframe src="output_data/emo_choropleth.html" width="1000" height="600" frameBorder="0">></iframe>
     <br>
     <iframe src="output_data/animated_emo_choropleth.html" width="1000" height="600" frameBorder="0">></iframe>
     <br>
-    <iframe src="output_data/streamgraph.html" width="1000" height="600" frameBorder="0">></iframe>
-    <br>
-    <iframe src="output_data/hashtag_chart.html" width="850" height="400" frameBorder="0">></iframe>
-    <br>
-    <iframe src="output_data/interactive_tweet_trends.html" width="950" height="700" frameBorder="0">></iframe>
-    <br>
-    <br>
-    <iframe src="output_data/forecast_chart.html" width="950" height="750" frameBorder="0">></iframe>
+    <iframe src="output_data/emotion_by_div_reg.html" width="1100" height="2000" frameBorder="0">></iframe>
     """
 
 
     f.write(html_template)
     f.close()
 
+    print(f"Report saved to: {os.getcwd()}\Sentiment_Report.html")
 
 def check_trend(*args):
     """
@@ -139,7 +155,7 @@ def streamgraph():
             axis=alt.Axis(domain=False, grid=False, tickSize=0)
         ),
         alt.Y('count(OVERALL_EMO):N', stack='center',
-             axis=alt.Axis(domain=False, grid=False, tickSize=0)),
+             axis=None, title="", ),
         alt.Color('OVERALL_EMO:N',
             scale=alt.Scale(domain=emos,
                             range=colors),
@@ -286,7 +302,7 @@ def forecast_chart():
 
     lines = alt.layer(
         base.mark_line(color='black').encode(alt.Y('COUNT')),
-        base.mark_line(color='orange').encode(alt.Y('Predictions:Q', title = "Average Tweet Count"))
+        base.mark_line(color='purple').encode(alt.Y('Predictions:Q', title = "Average Tweet Count"))
     ).properties(height = 500, width = 800)
     save(lines, "output_data/forecast_chart.html")
 
@@ -405,3 +421,57 @@ def animated_emo_choropleth():
     fig.layout.updatemenus[0].buttons[0].args[1]['frame']['duration'] = 1000
 
     fig.write_html('output_data/animated_emo_choropleth.html')
+
+def emotion_by_div_reg():
+    import pandas as pd
+    import altair as alt
+    import numpy as np
+    from altair_saver import save
+    from sklearn import preprocessing
+    from gps_695 import database as d
+
+    cnx = d.connect_to_database()
+    df = pd.read_sql_query("""
+    SELECT 
+    COUNT(T.TWEET_ID) AS COUNT,
+    T.OVERALL_EMO,
+    D.DIVISION,
+    R.REGION
+    FROM TWEET_TEXT T 
+    JOIN AUTHOR_LOCATION A ON T.AUTHOR_ID = A.AUTHOR_ID
+    JOIN US_STATES S ON A.STATE_ID = S.STATE_ID
+    JOIN DIVISIONS D ON D.DIV_ID = S.DIV_ID
+    JOIN REGIONS R ON R.REG_ID = D.REG_ID
+    GROUP BY T.OVERALL_EMO, D.DIVISION, R.REGION
+    """, cnx)
+
+    df['count_norm'] = preprocessing.normalize(np.array(df['COUNT']).reshape(-1, 1), axis=0)
+    div_charts = []
+    reg_charts = []
+
+    for e in df['OVERALL_EMO'].unique():
+        df_div = df[df['OVERALL_EMO'] == e]
+        divisions = alt.Chart(df_div).mark_bar(color='#2182bd').encode(
+            y=alt.Y('DIVISION', title=''),
+            x=alt.X('count_norm:Q', title='Tweet Count', scale=alt.Scale(domain=[0, 1]))
+        ).properties(title=f'{e}')
+        div_charts.append(divisions)
+
+    for e in df['OVERALL_EMO'].unique():
+        df_div = df[df['OVERALL_EMO'] == e]
+        regions = alt.Chart(df_div).mark_bar(color='#2182bd').encode(
+            y=alt.Y('REGION', title=''),
+            x=alt.X('count_norm:Q', title='', scale=alt.Scale(domain=[0, 1]))
+        ).properties(title=f'{e}')
+        reg_charts.append(regions)
+
+    divisions = alt.vconcat(*div_charts).properties(title="Sentiment by US Division")
+    regions = alt.vconcat(*reg_charts).properties(title="Sentiment by US Region")
+
+    chart = alt.hconcat(divisions, regions).resolve_axis(
+        x='independent',
+        y='independent',
+    ).properties(title={"text": "Tweet Sentiment Count by US Division and Location",
+                        "subtitle": ["Tweet counts normalized to adjust for variation in daily volume", " "]})
+
+    save(chart, "output_data/emotion_by_div_reg.html")
