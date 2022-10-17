@@ -6,6 +6,11 @@ This package uses unsupervised machine learning to understand what words are ass
 
 Supervised learning is used to expedite the package runtime. Only a subset of words are analyzed using [text2emotion](https://pypi.org/project/text2emotion/), the rest are predicted with [Support Vector Machines](https://scikit-learn.org/stable/modules/svm.html) via scikit learn.
 
+There are two basic requirements to use TweetERA:
+1) You must have [research level access to Twitter API v2](https://developer.twitter.com/en/products/twitter-api/academic-research) and adhere to its terms and agreements.
+2) You must create an empty MySQL database (details below).
+
+
 # Getting Started
 
 ## Setting up MySQL
@@ -176,7 +181,11 @@ v.check_trend("hello", "goodbye", "nice to meet you") #or put in multiple words
 
 3) Why did you choose MySQL? "X" is so much better...
 
-    Because I wrote this package and you didn't. Jokes aside, MySQL was chosen for simplicity and ease of setup. Future iterations of this package may include more connectors, but for now MySQL was the simplest choice in our opinion to get you moving quickly. MySQL had no obvious benefits over Maria DB, Postgres, or any other open source database software.
+    Because we wrote this package and you didn't. Jokes aside, MySQL was chosen for simplicity and ease of setup. Future iterations of this package may include more connectors, but for now MySQL was the simplest choice in our opinion to get you moving quickly. MySQL had no obvious benefits over Maria DB, Postgres, or any other open source database software.
+    
+4) Will Tweetera work if I don't have research level access to Twitter API v2?
+
+    No.
 
 # Errors
 
