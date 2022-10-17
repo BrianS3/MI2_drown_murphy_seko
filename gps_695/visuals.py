@@ -102,7 +102,7 @@ def generate_report():
     <br>
     <iframe src="output_data/animated_emo_choropleth.html" width="1000" height="600" frameBorder="0">></iframe>
     <br>
-    <iframe src="output_data/emotion_by_div_reg.html" width="1100" height="2000" frameBorder="0">></iframe>
+    <iframe src="output_data/emotion_by_div_reg.html" width="1200" height="2000" frameBorder="0">></iframe>
     """
 
 
