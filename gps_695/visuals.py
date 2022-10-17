@@ -448,6 +448,9 @@ def emotion_by_div_reg():
     df['count_norm'] = preprocessing.normalize(np.array(df['COUNT']).reshape(-1, 1), axis=0)
     div_charts = []
     reg_charts = []
+    
+    colors = ['#a8201a', '#ec9a29', '#7e935b', '#143642', '#857f83', '#526797', '#0f8b8d']
+    emos = [ 'Angry', 'Fear', 'Happy', 'Mixed', 'Neutral', 'Sad', 'Surprise']
 
     for e in df['OVERALL_EMO'].unique():
         df_div = df[df['OVERALL_EMO'] == e]
