@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!-- saved from url=(0139)file:///C:/Users/brian/OneDrive/MADS%20Classwork/SIADS%20696_697%20Milestone%20II/MI2_drown_murphy_seko/output_data/emotion_by_div_reg.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252"><style id="vega-tooltip-style">#vg-tooltip-element {
+  visibility: hidden;
+  padding: 8px;
+  position: fixed;
+  z-index: 1000;
+  font-family: sans-serif;
+  font-size: 11px;
+  border-radius: 3px;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  /* The default theme is the light theme. */
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid #d9d9d9;
+  color: black;
+}
+#vg-tooltip-element.visible {
+  visibility: visible;
+}
+#vg-tooltip-element h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+#vg-tooltip-element img {
+  max-width: 200px;
+  max-height: 200px;
+}
+#vg-tooltip-element table {
+  border-spacing: 0;
+}
+#vg-tooltip-element table tr {
+  border: none;
+}
+#vg-tooltip-element table tr td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+#vg-tooltip-element table tr td.key {
+  color: #808080;
+  max-width: 150px;
+  text-align: right;
+  padding-right: 4px;
+}
+#vg-tooltip-element table tr td.value {
+  display: block;
+  max-width: 300px;
+  max-height: 7em;
+  text-align: left;
+}
+#vg-tooltip-element.dark-theme {
+  background-color: rgba(32, 32, 32, 0.9);
+  border: 1px solid #f5f5f5;
+  color: white;
+}
+#vg-tooltip-element.dark-theme td.key {
+  color: #bfbfbf;
+}
+</style>
+  <script src="./vega@5"></script>
+  <script src="./vega-lite@4.17.0"></script>
+  <script src="./vega-embed@6"></script>
+<style id="vega-embed-style">.vega-embed {
+  position: relative;
+  display: inline-block;
+  box-sizing: border-box;
+}
+.vega-embed.has-actions {
+  padding-right: 38px;
+}
+.vega-embed details:not([open]) > :not(summary) {
+  display: none !important;
+}
+.vega-embed summary {
+  list-style: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 6px;
+  z-index: 1000;
+  background: white;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+  color: #1b1e23;
+  border: 1px solid #aaa;
+  border-radius: 999px;
+  opacity: 0.2;
+  transition: opacity 0.4s ease-in;
+  cursor: pointer;
+  line-height: 0px;
+}
+.vega-embed summary::-webkit-details-marker {
+  display: none;
+}
+.vega-embed summary:active {
+  box-shadow: #aaa 0px 0px 0px 1px inset;
+}
+.vega-embed summary svg {
+  width: 14px;
+  height: 14px;
+}
+.vega-embed details[open] summary {
+  opacity: 0.7;
+}
+.vega-embed:hover summary, .vega-embed:focus-within summary {
+  opacity: 1 !important;
+  transition: opacity 0.2s ease;
+}
+.vega-embed .vega-actions {
+  position: absolute;
+  z-index: 1001;
+  top: 35px;
+  right: -9px;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 8px;
+  padding-top: 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.2);
+  border: 1px solid #d9d9d9;
+  background: white;
+  animation-duration: 0.15s;
+  animation-name: scale-in;
+  animation-timing-function: cubic-bezier(0.2, 0, 0.13, 1.5);
+  text-align: left;
+}
+.vega-embed .vega-actions a {
+  padding: 8px 16px;
+  font-family: sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #434a56;
+  text-decoration: none;
+}
+.vega-embed .vega-actions a:hover, .vega-embed .vega-actions a:focus {
+  background-color: #f7f7f9;
+  color: black;
+}
+.vega-embed .vega-actions::before, .vega-embed .vega-actions::after {
+  content: "";
+  display: inline-block;
+  position: absolute;
+}
+.vega-embed .vega-actions::before {
+  left: auto;
+  right: 14px;
+  top: -16px;
+  border: 8px solid rgba(0, 0, 0, 0);
+  border-bottom-color: #d9d9d9;
+}
+.vega-embed .vega-actions::after {
+  left: auto;
+  right: 15px;
+  top: -14px;
+  border: 7px solid rgba(0, 0, 0, 0);
+  border-bottom-color: #fff;
+}
+.vega-embed .chart-wrapper.fit-x {
+  width: 100%;
+}
+.vega-embed .chart-wrapper.fit-y {
+  height: 100%;
+}
+
+.vega-embed-wrapper {
+  max-width: 100%;
+  overflow: auto;
+  padding-right: 14px;
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+</style></head>
+<body>
+<div class="vega-visualization vega-embed has-actions" id="vega-visualization-ab8b3311fe1c48a896bac48fc9ae6061"><div class="chart-wrapper" role="graphics-document" aria-roledescription="visualization" aria-label="Vega visualization" style="cursor: default;"><canvas width="1029" height="1809" class="marks"></canvas><form class="vega-bindings"></form></div><details title="Click to view actions"><summary>
+<svg viewBox="0 0 16 16" fill="currentColor" stroke="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+  <circle r="2" cy="8" cx="2"></circle>
+  <circle r="2" cy="8" cx="8"></circle>
+  <circle r="2" cy="8" cx="14"></circle>
+</svg></summary><div class="vega-actions"><a href="file:///C:/Users/brian/OneDrive/MADS%20Classwork/SIADS%20696_697%20Milestone%20II/MI2_drown_murphy_seko/output_data/emotion_by_div_reg.html#" target="_blank" download="visualization.svg">Save as SVG</a><a href="file:///C:/Users/brian/OneDrive/MADS%20Classwork/SIADS%20696_697%20Milestone%20II/MI2_drown_murphy_seko/output_data/emotion_by_div_reg.html#" target="_blank" download="visualization.png">Save as PNG</a><a href="file:///C:/Users/brian/OneDrive/MADS%20Classwork/SIADS%20696_697%20Milestone%20II/MI2_drown_murphy_seko/output_data/emotion_by_div_reg.html#">View Source</a><a href="file:///C:/Users/brian/OneDrive/MADS%20Classwork/SIADS%20696_697%20Milestone%20II/MI2_drown_murphy_seko/output_data/emotion_by_div_reg.html#">View Compiled Vega</a><a href="file:///C:/Users/brian/OneDrive/MADS%20Classwork/SIADS%20696_697%20Milestone%20II/MI2_drown_murphy_seko/output_data/emotion_by_div_reg.html#">Open in Vega Editor</a></div></details></div>
+<script type="text/javascript">
+  const spec = {"config": {"view": {"continuousWidth": 400, "continuousHeight": 300}}, "hconcat": [{"vconcat": [{"data": {"name": "data-e00b9708ce8f057eb1a17d4972e9776d"}, "mark": {"type": "bar", "color": "#2182bd"}, "encoding": {"x": {"field": "count_norm", "scale": {"domain": [0, 1]}, "title": "Tweet Count", "type": "quantitative"}, "y": {"field": "DIVISION", "title": "", "type": "nominal"}}, "title": "Neutral"}, {"data": {"name": "data-dd263201bb9031854d5c5ad56af3b53c"}, "mark": {"type": "bar", "color": "#2182bd"}, "encoding": {"x": {"field": "count_norm", "scale": {"domain": [0, 1]}, "title": "Tweet Count", "type": "quantitative"}, "y": {"field": "DIVISION", "title": "", "type": "nominal"}}, "title": "Fear"}, {"data": {"name": "data-c48ca444dbda3f0ff7e30b0cba27df4a"}, "mark": {"type": "bar", "color": "#2182bd"}, "encoding": {"x": {"field": "count_norm", "scale": {"domain": [0, 1]}, "title": "Tweet Count", "type": "quantitative"}, "y": {"field": "DIVISION", "title": "", "type": "nominal"}}, "title": "Mixed"}, {"data": {"name": "data-e9690336adb54676aa386401c3284d62"}, "mark": {"type": "bar", "color": "#2182bd"}, "encoding": {"x": {"field": "count_norm", "scale": {"domain": [0, 1]}, "title": "Tweet Count", "type": "quantitative"}, "y": {"field": "DIVISION", "title": "", "type": "nominal"}}, "title": "Sad"}, {"data": {"name": "data-59783752a5d5011ed4543579400d9104"}, "mark": {"type": "bar", "color": "#2182bd"}, "encoding": {"x": {"field": "count_norm", "scale": {"domain": [0, 1]}, "title": "Tweet Count", "type": "quantitative"}, "y": {"field": "DIVISION", "title": "", "type": "nominal"}}, "title": "Surprise"}, {"data": {"name": "data-0c7e17a68a8347e34d65b2256383d9c9"}, "mark": {"type": "bar", "color": "#2182bd"}, "encoding": {"x": {"field": "count_norm", "scale": {"domain": [0, 1]}, "title": "Tweet Count", "type": "quantitative"}, "y": {"field": "DIVISION", "title": "", "type": "nominal"}}, "title": "Angry"}, {"data": {"name": "data-a57e3425d803bf8c3c267b2e76b61fe7"}, "mark": {"type": "bar", "color": "#2182bd"}, "encoding": {"x": {"field": "count_norm", "scale": {"domain": [0, 1]}, "title": "Tweet Count", "type": "quantitative"}, "y": {"field": "DIVISION", "title": "", "type": "nominal"}}, "title": "Happy"}], "title": "Sentiment by US Division"}, {"vconcat": [{"data": {"name": "data-e00b9708ce8f057eb1a17d4972e9776d"}, "mark": {"type": "bar", "color": "#2182bd"}, "encoding": {"x": {"field": "count_norm", "scale": {"domain": [0, 1]}, "title": "", "type": "quantitative"}, "y": {"field": "REGION", "title": "", "type": "nominal"}}, "title": "Neutral"}, {"data": {"name": "data-dd263201bb9031854d5c5ad56af3b53c"}, "mark": {"type": "bar", "color": "#2182bd"}, "encoding": {"x": {"field": "count_norm", "scale": {"domain": [0, 1]}, "title": "", "type": "quantitative"}, "y": {"field": "REGION", "title": "", "type": "nominal"}}, "title": "Fear"}, {"data": {"name": "data-c48ca444dbda3f0ff7e30b0cba27df4a"}, "mark": {"type": "bar", "color": "#2182bd"}, "encoding": {"x": {"field": "count_norm", "scale": {"domain": [0, 1]}, "title": "", "type": "quantitative"}, "y": {"field": "REGION", "title": "", "type": "nominal"}}, "title": "Mixed"}, {"data": {"name": "data-e9690336adb54676aa386401c3284d62"}, "mark": {"type": "bar", "color": "#2182bd"}, "encoding": {"x": {"field": "count_norm", "scale": {"domain": [0, 1]}, "title": "", "type": "quantitative"}, "y": {"field": "REGION", "title": "", "type": "nominal"}}, "title": "Sad"}, {"data": {"name": "data-59783752a5d5011ed4543579400d9104"}, "mark": {"type": "bar", "color": "#2182bd"}, "encoding": {"x": {"field": "count_norm", "scale": {"domain": [0, 1]}, "title": "", "type": "quantitative"}, "y": {"field": "REGION", "title": "", "type": "nominal"}}, "title": "Surprise"}, {"data": {"name": "data-0c7e17a68a8347e34d65b2256383d9c9"}, "mark": {"type": "bar", "color": "#2182bd"}, "encoding": {"x": {"field": "count_norm", "scale": {"domain": [0, 1]}, "title": "", "type": "quantitative"}, "y": {"field": "REGION", "title": "", "type": "nominal"}}, "title": "Angry"}, {"data": {"name": "data-a57e3425d803bf8c3c267b2e76b61fe7"}, "mark": {"type": "bar", "color": "#2182bd"}, "encoding": {"x": {"field": "count_norm", "scale": {"domain": [0, 1]}, "title": "", "type": "quantitative"}, "y": {"field": "REGION", "title": "", "type": "nominal"}}, "title": "Happy"}], "title": "Sentiment by US Region"}], "resolve": {"axis": {"x": "independent", "y": "independent"}}, "title": {"text": "Tweet Sentiment Count by US Division and Location", "subtitle": ["Tweet counts normalized to adjust for variation in daily volume", " "]}, "$schema": "https://vega.github.io/schema/vega-lite/v4.17.0.json", "datasets": {"data-e00b9708ce8f057eb1a17d4972e9776d": [{"COUNT": 55, "OVERALL_EMO": "Neutral", "DIVISION": "EAST NORTH CENTRAL", "REGION": "MIDWEST", "count_norm": 0.08138089478975669}, {"COUNT": 73, "OVERALL_EMO": "Neutral", "DIVISION": "MOUNTAIN", "REGION": "WEST", "count_norm": 0.10801464217549524}, {"COUNT": 81, "OVERALL_EMO": "Neutral", "DIVISION": "MIDDLE ATLANTIC", "REGION": "NORTHEAST", "count_norm": 0.11985186323582349}, {"COUNT": 21, "OVERALL_EMO": "Neutral", "DIVISION": "EAST SOUTH CENTRAL", "REGION": "SOUTH", "count_norm": 0.031072705283361646}, {"COUNT": 135, "OVERALL_EMO": "Neutral", "DIVISION": "PACIFIC", "REGION": "WEST", "count_norm": 0.19975310539303914}, {"COUNT": 136, "OVERALL_EMO": "Neutral", "DIVISION": "SOUTH ATLANTIC", "REGION": "SOUTH", "count_norm": 0.2012327580255802}, {"COUNT": 37, "OVERALL_EMO": "Neutral", "DIVISION": "NEW ENGLAND", "REGION": "NORTHEAST", "count_norm": 0.054747147404018134}, {"COUNT": 60, "OVERALL_EMO": "Neutral", "DIVISION": "WEST SOUTH CENTRAL", "REGION": "SOUTH", "count_norm": 0.08877915795246184}, {"COUNT": 30, "OVERALL_EMO": "Neutral", "DIVISION": "WEST NORTH CENTRAL", "REGION": "MIDWEST", "count_norm": 0.04438957897623092}], "data-dd263201bb9031854d5c5ad56af3b53c": [{"COUNT": 301, "OVERALL_EMO": "Fear", "DIVISION": "SOUTH ATLANTIC", "REGION": "SOUTH", "count_norm": 0.4453754423948503}, {"COUNT": 274, "OVERALL_EMO": "Fear", "DIVISION": "PACIFIC", "REGION": "WEST", "count_norm": 0.4054248213162424}, {"COUNT": 142, "OVERALL_EMO": "Fear", "DIVISION": "MIDDLE ATLANTIC", "REGION": "NORTHEAST", "count_norm": 0.21011067382082638}, {"COUNT": 110, "OVERALL_EMO": "Fear", "DIVISION": "EAST NORTH CENTRAL", "REGION": "MIDWEST", "count_norm": 0.16276178957951337}, {"COUNT": 118, "OVERALL_EMO": "Fear", "DIVISION": "MOUNTAIN", "REGION": "WEST", "count_norm": 0.17459901063984162}, {"COUNT": 108, "OVERALL_EMO": "Fear", "DIVISION": "WEST SOUTH CENTRAL", "REGION": "SOUTH", "count_norm": 0.1598024843144313}, {"COUNT": 53, "OVERALL_EMO": "Fear", "DIVISION": "NEW ENGLAND", "REGION": "NORTHEAST", "count_norm": 0.07842158952467462}, {"COUNT": 44, "OVERALL_EMO": "Fear", "DIVISION": "EAST SOUTH CENTRAL", "REGION": "SOUTH", "count_norm": 0.06510471583180535}, {"COUNT": 56, "OVERALL_EMO": "Fear", "DIVISION": "WEST NORTH CENTRAL", "REGION": "MIDWEST", "count_norm": 0.08286054742229772}], "data-c48ca444dbda3f0ff7e30b0cba27df4a": [{"COUNT": 196, "OVERALL_EMO": "Mixed", "DIVISION": "SOUTH ATLANTIC", "REGION": "SOUTH", "count_norm": 0.29001191597804205}, {"COUNT": 84, "OVERALL_EMO": "Mixed", "DIVISION": "MOUNTAIN", "REGION": "WEST", "count_norm": 0.12429082113344658}, {"COUNT": 76, "OVERALL_EMO": "Mixed", "DIVISION": "WEST NORTH CENTRAL", "REGION": "MIDWEST", "count_norm": 0.11245360007311833}, {"COUNT": 207, "OVERALL_EMO": "Mixed", "DIVISION": "PACIFIC", "REGION": "WEST", "count_norm": 0.30628809493599335}, {"COUNT": 44, "OVERALL_EMO": "Mixed", "DIVISION": "NEW ENGLAND", "REGION": "NORTHEAST", "count_norm": 0.06510471583180535}, {"COUNT": 88, "OVERALL_EMO": "Mixed", "DIVISION": "EAST NORTH CENTRAL", "REGION": "MIDWEST", "count_norm": 0.1302094316636107}, {"COUNT": 30, "OVERALL_EMO": "Mixed", "DIVISION": "EAST SOUTH CENTRAL", "REGION": "SOUTH", "count_norm": 0.04438957897623092}, {"COUNT": 115, "OVERALL_EMO": "Mixed", "DIVISION": "MIDDLE ATLANTIC", "REGION": "NORTHEAST", "count_norm": 0.17016005274221854}, {"COUNT": 87, "OVERALL_EMO": "Mixed", "DIVISION": "WEST SOUTH CENTRAL", "REGION": "SOUTH", "count_norm": 0.12872977903106966}], "data-e9690336adb54676aa386401c3284d62": [{"COUNT": 75, "OVERALL_EMO": "Sad", "DIVISION": "PACIFIC", "REGION": "WEST", "count_norm": 0.1109739474405773}, {"COUNT": 34, "OVERALL_EMO": "Sad", "DIVISION": "MOUNTAIN", "REGION": "WEST", "count_norm": 0.05030818950639505}, {"COUNT": 84, "OVERALL_EMO": "Sad", "DIVISION": "SOUTH ATLANTIC", "REGION": "SOUTH", "count_norm": 0.12429082113344658}, {"COUNT": 18, "OVERALL_EMO": "Sad", "DIVISION": "NEW ENGLAND", "REGION": "NORTHEAST", "count_norm": 0.026633747385738555}, {"COUNT": 31, "OVERALL_EMO": "Sad", "DIVISION": "EAST NORTH CENTRAL", "REGION": "MIDWEST", "count_norm": 0.04586923160877195}, {"COUNT": 47, "OVERALL_EMO": "Sad", "DIVISION": "MIDDLE ATLANTIC", "REGION": "NORTHEAST", "count_norm": 0.06954367372942845}, {"COUNT": 24, "OVERALL_EMO": "Sad", "DIVISION": "WEST NORTH CENTRAL", "REGION": "MIDWEST", "count_norm": 0.03551166318098474}, {"COUNT": 36, "OVERALL_EMO": "Sad", "DIVISION": "WEST SOUTH CENTRAL", "REGION": "SOUTH", "count_norm": 0.05326749477147711}, {"COUNT": 6, "OVERALL_EMO": "Sad", "DIVISION": "EAST SOUTH CENTRAL", "REGION": "SOUTH", "count_norm": 0.008877915795246185}], "data-59783752a5d5011ed4543579400d9104": [{"COUNT": 94, "OVERALL_EMO": "Surprise", "DIVISION": "SOUTH ATLANTIC", "REGION": "SOUTH", "count_norm": 0.1390873474588569}, {"COUNT": 75, "OVERALL_EMO": "Surprise", "DIVISION": "PACIFIC", "REGION": "WEST", "count_norm": 0.1109739474405773}, {"COUNT": 19, "OVERALL_EMO": "Surprise", "DIVISION": "NEW ENGLAND", "REGION": "NORTHEAST", "count_norm": 0.028113400018279583}, {"COUNT": 34, "OVERALL_EMO": "Surprise", "DIVISION": "MOUNTAIN", "REGION": "WEST", "count_norm": 0.05030818950639505}, {"COUNT": 29, "OVERALL_EMO": "Surprise", "DIVISION": "WEST SOUTH CENTRAL", "REGION": "SOUTH", "count_norm": 0.04290992634368989}, {"COUNT": 30, "OVERALL_EMO": "Surprise", "DIVISION": "EAST NORTH CENTRAL", "REGION": "MIDWEST", "count_norm": 0.04438957897623092}, {"COUNT": 51, "OVERALL_EMO": "Surprise", "DIVISION": "MIDDLE ATLANTIC", "REGION": "NORTHEAST", "count_norm": 0.07546228425959257}, {"COUNT": 19, "OVERALL_EMO": "Surprise", "DIVISION": "WEST NORTH CENTRAL", "REGION": "MIDWEST", "count_norm": 0.028113400018279583}, {"COUNT": 13, "OVERALL_EMO": "Surprise", "DIVISION": "EAST SOUTH CENTRAL", "REGION": "SOUTH", "count_norm": 0.019235484223033398}], "data-0c7e17a68a8347e34d65b2256383d9c9": [{"COUNT": 14, "OVERALL_EMO": "Angry", "DIVISION": "WEST SOUTH CENTRAL", "REGION": "SOUTH", "count_norm": 0.02071513685557443}, {"COUNT": 9, "OVERALL_EMO": "Angry", "DIVISION": "MIDDLE ATLANTIC", "REGION": "NORTHEAST", "count_norm": 0.013316873692869277}, {"COUNT": 20, "OVERALL_EMO": "Angry", "DIVISION": "PACIFIC", "REGION": "WEST", "count_norm": 0.029593052650820614}, {"COUNT": 15, "OVERALL_EMO": "Angry", "DIVISION": "SOUTH ATLANTIC", "REGION": "SOUTH", "count_norm": 0.02219478948811546}, {"COUNT": 8, "OVERALL_EMO": "Angry", "DIVISION": "MOUNTAIN", "REGION": "WEST", "count_norm": 0.011837221060328246}, {"COUNT": 8, "OVERALL_EMO": "Angry", "DIVISION": "EAST NORTH CENTRAL", "REGION": "MIDWEST", "count_norm": 0.011837221060328246}, {"COUNT": 3, "OVERALL_EMO": "Angry", "DIVISION": "EAST SOUTH CENTRAL", "REGION": "SOUTH", "count_norm": 0.0044389578976230925}, {"COUNT": 6, "OVERALL_EMO": "Angry", "DIVISION": "NEW ENGLAND", "REGION": "NORTHEAST", "count_norm": 0.008877915795246185}, {"COUNT": 3, "OVERALL_EMO": "Angry", "DIVISION": "WEST NORTH CENTRAL", "REGION": "MIDWEST", "count_norm": 0.0044389578976230925}], "data-a57e3425d803bf8c3c267b2e76b61fe7": [{"COUNT": 11, "OVERALL_EMO": "Happy", "DIVISION": "MIDDLE ATLANTIC", "REGION": "NORTHEAST", "count_norm": 0.01627617895795134}, {"COUNT": 14, "OVERALL_EMO": "Happy", "DIVISION": "PACIFIC", "REGION": "WEST", "count_norm": 0.02071513685557443}, {"COUNT": 2, "OVERALL_EMO": "Happy", "DIVISION": "MOUNTAIN", "REGION": "WEST", "count_norm": 0.0029593052650820615}, {"COUNT": 15, "OVERALL_EMO": "Happy", "DIVISION": "SOUTH ATLANTIC", "REGION": "SOUTH", "count_norm": 0.02219478948811546}, {"COUNT": 11, "OVERALL_EMO": "Happy", "DIVISION": "EAST NORTH CENTRAL", "REGION": "MIDWEST", "count_norm": 0.01627617895795134}, {"COUNT": 7, "OVERALL_EMO": "Happy", "DIVISION": "EAST SOUTH CENTRAL", "REGION": "SOUTH", "count_norm": 0.010357568427787215}, {"COUNT": 4, "OVERALL_EMO": "Happy", "DIVISION": "WEST NORTH CENTRAL", "REGION": "MIDWEST", "count_norm": 0.005918610530164123}, {"COUNT": 4, "OVERALL_EMO": "Happy", "DIVISION": "WEST SOUTH CENTRAL", "REGION": "SOUTH", "count_norm": 0.005918610530164123}, {"COUNT": 2, "OVERALL_EMO": "Happy", "DIVISION": "NEW ENGLAND", "REGION": "NORTHEAST", "count_norm": 0.0029593052650820615}]}};
+  const embedOpt = {};
+  vegaEmbed('#vega-visualization-ab8b3311fe1c48a896bac48fc9ae6061', spec, embedOpt).catch(console.error);
+</script>
+
+
+</body></html>
