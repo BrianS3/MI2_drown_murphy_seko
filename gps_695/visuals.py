@@ -92,6 +92,7 @@ def generate_report():
     elif slope < 0:
         trend = "Shrinking"
         trend_term = "Losing"
+        slope = slope*-1
     else:
         trend = "Flat"
         trend_term = "Is Stable With"
@@ -118,7 +119,7 @@ def generate_report():
     <br>
     Overall, users felt mostly <b>{results4[0][1]}</b> about the topic, with a total tweet count of {results4[0][0]}. 
     <br>
-    With an average tweet count by sentiment being {result4_mean}, this is <i>{round(results4[0][0]/result4_mean)*100}%</i> above the mean.
+    With an average tweet count by sentiment being {result4_mean}, this is <i>{round(results4[0][0]/result4_mean,4)*100}%</i> above the mean.
     <br>
     <br>
     </p>
@@ -128,7 +129,7 @@ def generate_report():
     <br>
     <iframe src="output_data/simple_trend.html" width="950" height="300" frameBorder="0">></iframe>
     <br>
-    The trend analysis of this search term indicates volume is <b>{trend}</b>. This trend is <b>{trend_term}</b> a general increase of <i>{round(slope,2)}</i> tweets per day.
+    The trend analysis of this search term indicates volume is <b>{trend}</b>. This trend is <b>{trend_term}</b> approximately <i>{round(slope,2)}</i> tweets per day.
     <br>
     <br>
     The following chart can be used to see how much a trend is growing or shrinking. The top half shows the average tweet volume per day, and the 
