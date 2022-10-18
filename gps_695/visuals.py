@@ -169,7 +169,9 @@ def generate_report():
     <br>
     <iframe src="output_data/animated_emo_choropleth.html" width="1000" height="600" frameBorder="0">></iframe>
     <br>
-    <iframe src="output_data/division_author_count.html" width="950" height="400" frameBorder="0">></iframe>
+    <br>
+    <iframe src="output_data/division_author_count.html" width="950" height="475" frameBorder="0">></iframe>
+    <br>
     <br>
     <iframe src="output_data/emotion_by_div_reg.html" width="1200" height="2000" frameBorder="0">></iframe>
     """
@@ -599,10 +601,10 @@ def division_author_count():
 
     df = pd.read_sql_query(query, cnx)
 
-    chart = alt.Chart(df).mark_bar(color='#2182bd').encode(
+    chart = alt.Chart(df).mark_bar(color='#2182bd', title="Authors with Set Locations").encode(
         y=alt.Y('DIVISION:N', axis=alt.Axis(grid=False, title='US Division'), sort='-x'),
-        x=alt.X('ACOUNT:Q', title="Authors with Set Locations")
-    ).properties(height=400, width=600)
+        x=alt.X('ACOUNT:Q', title="Author Count")
+    ).properties(height=475, width=600)
 
     save(chart, "output_data/division_author_count.html")
 
