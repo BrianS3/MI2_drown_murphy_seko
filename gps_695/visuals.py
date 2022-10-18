@@ -6,6 +6,8 @@ def generate_report():
     import warnings
     warnings.simplefilter(action='ignore') #added due to known bug in current pandas version
     import os
+    import numpy as np
+    import pandas as pd
     from gps_695 import visuals as v
     from gps_695 import database as d
 
@@ -17,6 +19,8 @@ def generate_report():
     v.interactive_tweet_trends()
     v.animated_emo_choropleth()
     v.emotion_by_div_reg()
+    v.simple_trend()
+    v.division_author_count()
     print("Charts created")
     print("Compiling report")
     cnx = d.connect_to_database()
@@ -61,11 +65,47 @@ def generate_report():
     result4_vals = [x[0] for x in results4]
     result4_mean = round(sum(result4_vals)/len(result4_vals),2)
 
+    db_return5 = cnx.execute("""
+        SELECT DISTINCT 
+        SEARCH_TERM 
+        FROM TWEET_TEXT
+        """)
+    results5 = db_return5.fetchall()
+
+    df_trend = pd.read_sql_query("""
+    SELECT DISTINCT 
+            CREATED, COUNT(TWEET_ID)/COUNT(DISTINCT SEARCH_TERM) AS AVG_T
+            FROM TWEET_TEXT
+            GROUP BY CREATED""", cnx)
+
+    slope, intercept = np.polyfit(x=df_trend.index,y=df_trend['AVG_T'], deg=1, rcond=None, full=False, w=None, cov=False)
+
+    df_trend['AVG_T_SHIFT'] = df_trend['AVG_T'].shift(1)
+    df_trend['difference'] = df_trend['AVG_T'] - df_trend['AVG_T_SHIFT']
+    df_trend['difference'] = df_trend['difference'].abs()
+
+    trend = None
+    trend_term = None
+    if slope > 0:
+        trend = "Growing"
+        trend_term = "Gaining"
+    elif slope < 0:
+        trend = "Shrinking"
+        trend_term = "Losing"
+    else:
+        trend = "Flat"
+        trend_term = "Is Stable With"
+
+
+
     f = open('Sentiment_Report.html', 'w')
+
     html_template = f"""
     <h1>Tweet Sentiment Report</h1>
     <p>
     Search Term: {results[0][0]}
+    <br>
+    Associated Terms: {', '.join([x[0] for x in results5])}
     <br>
     Start Date: {results[0][2]}
     <br>
@@ -78,24 +118,54 @@ def generate_report():
     <br>
     Overall, users felt mostly <b>{results4[0][1]}</b> about the topic, with a total tweet count of {results4[0][0]}. 
     <br>
-    With average tweet count by sentiment being {result4_mean}, this is <i>{round(results4[0][0]/result4_mean)*100}%</i> above the mean.
+    With an average tweet count by sentiment being {result4_mean}, this is <i>{round(results4[0][0]/result4_mean)*100}%</i> above the mean.
     <br>
     <br>
     </p>
     <iframe src="output_data/streamgraph.html" width="1000" height="650" frameBorder="0">></iframe>
     <br>
+    <h2>Tweet Trends and Forecast</h2>
+    <br>
+    <iframe src="output_data/simple_trend.html" width="950" height="300" frameBorder="0">></iframe>
+    <br>
+    The a trend analysis of this search term indicates volume is <b>{trend}</b>. This trend is <b>{trend_term}</b> a general increase of <i>{round(slope,2)}</i> tweets per day.
+    <br>
+    <br>
+    The following chart can be used to see how much a trend is growing or shrinking. The top half shows the average tweet volume per day, and the 
+    <br>
+    bottom shows the sentiment trend. Selecting a segment on the top will allow you to focus on a section below. Selecting an emotion will 
+    <br>
+    filter all others. Press F5 or reload to reset the chart. This chart can help isolate spikes in emotions based on twitter users' exposure to new information 
+    <br>
+    in the timeline.
+    <br> 
     <iframe src="output_data/interactive_tweet_trends.html" width="950" height="700" frameBorder="0">></iframe>
     <br>
-    <iframe src="output_data/forecast_chart.html" width="950" height="750" frameBorder="0">></iframe>
     <br>
+    <br>
+    The following chart shows a prediction of tweets over the next 10 days. The black line indicates the current average volume, while the 
+    <br>
+    magenta line indicates the predictions. If a search term has little volume, predictions can be hard to make and should be evaluated in context of the tweet volume.
+    <br>
+    <iframe src="output_data/forecast_chart.html" width="950" height="700" frameBorder="0">></iframe>
+    <br>
+    <br>
+    <h2> Hashtags </h2>
+    This chart shows the hashtag use by volume. A hashtag-driven topic is immediately popular at a particular time, these may provide 
+    <br>
+    good alternate search terms.
+    <br> 
     <iframe src="output_data/hashtag_chart.html" width="850" height="400" frameBorder="0">></iframe>
     <br>
+    <h2> User Locations </h2>
     <br>
-    This data represents users who entered enough location data to identify their home state.
-    <br> 
-    This data does not reflect the location of a user at the time they created a tweet.
+    This data represents users who entered enough location data to identify their home state and does not reflect the location of a user 
     <br>
-    You will notice that tweet volume is lower in this section.
+    at the time they created a tweet.You will notice that tweet volume is lower in this section. Lower tweet volume by location may is 
+    <br>
+    dependent to the number of users with a set locations.
+    <br>
+    <iframe src="output_data/division_author_count.html" width="950" height="450" frameBorder="0">></iframe>
     <br>
     <br>
     <iframe src="output_data/emo_choropleth.html" width="1000" height="600" frameBorder="0">></iframe>
@@ -104,7 +174,6 @@ def generate_report():
     <br>
     <iframe src="output_data/emotion_by_div_reg.html" width="1200" height="2000" frameBorder="0">></iframe>
     """
-
 
     f.write(html_template)
     f.close()
@@ -249,11 +318,11 @@ def hashtag_chart():
     hash_df.reset_index(inplace=True, drop=True)
 
 
-    bars = alt.Chart(hash_df, title=["Top Hashtags", f"Search Terms: {df['SEARCH_TERM'].unique()}"]).mark_bar().encode(
-        y = alt.Y('index:N', sort='-x', axis=alt.Axis(grid=False, title='hashtag')),
-        x = alt.X('count:Q', axis=alt.Axis(grid=False)),
-        color = alt.Color('count:Q',scale=alt.Scale(scheme="goldorange"), legend=None)
-    ).properties(height=300, width=500)
+    bars = alt.Chart(hash_df, title=["Top Hashtags", f"Search Terms: {df['SEARCH_TERM'].unique()}"]).mark_bar(color = '#2182bd').encode(
+        y = alt.Y('index:N', sort='-x', axis=alt.Axis(grid=False, title='Hashtag')),
+        x = alt.X('count:Q', axis=alt.Axis(grid=True, title="Tweet Count"))
+    ).properties(height=300, width=500).configure_axis(
+    labelFontSize=14)
     
     save(bars, "output_data/hashtag_chart.html")
     
@@ -264,7 +333,6 @@ def forecast_chart():
     '''
     from gps_695 import database as d
     import pandas as pd
-    import numpy as np
     from statsmodels.tsa.arima.model import ARIMA
     import datetime
     import altair as alt
@@ -290,10 +358,11 @@ def forecast_chart():
     y_pred_df = y_pred.conf_int(alpha = 0.05)
     y_pred_df["Predictions"] = ARIMAmodel.predict(start = y_pred_df.index[0], end = y_pred_df.index[-1])
     y_pred_df['CREATED'] = x_dates
+    y_pred_df.loc[len(y_pred_df)] = [None,None,df.iat[-1, 0], df.iat[-1,1]]
 
     df = pd.concat([df,y_pred_df])
     lines = alt.Chart(df).mark_line().encode(
-    x='CREATED',
+    x=alt.X('CREATED',axis=alt.Axis(grid=False)),
     y = alt.Y('COUNT'),
     y2 = alt.Y('Predictions:Q')
     )
@@ -484,3 +553,57 @@ def emotion_by_div_reg():
                         "subtitle": ["Tweet counts normalized to adjust for variation in daily volume", " "]})
 
     save(chart, "output_data/emotion_by_div_reg.html")
+
+def simple_trend():
+    import pandas as pd
+    import altair as alt
+    from altair_saver import save
+    from gps_695 import database as d
+
+    cnx = d.connect_to_database()
+    query = """
+    SELECT  
+        CREATED,
+        COUNT(TWEET_ID)/COUNT(DISTINCT SEARCH_TERM) AS AVG_T
+        FROM TWEET_TEXT
+        GROUP BY CREATED
+    """
+    df = pd.read_sql_query(query, cnx)
+
+    base = alt.Chart(df).mark_point().encode(
+        x=alt.X('CREATED:T', axis=alt.Axis(grid=False, title="Date Created")),
+        y=alt.Y('AVG_T:Q', axis=alt.Axis(grid=True, title="Average Tweet Volume"))
+    )
+
+    chart = base+base.transform_regression('CREATED', 'AVG_T').mark_line(color="red")
+
+    save(chart.properties(height=200, width=700), "output_data/simple_trend.html")
+
+def division_author_count():
+    import pandas as pd
+    import altair as alt
+    from altair_saver import save
+    from gps_695 import database as d
+
+    cnx = d.connect_to_database()
+
+    query = """
+    SELECT 
+    COUNT(A.AUTHOR_ID) AS ACOUNT,
+    D.DIVISION
+    FROM AUTHOR_LOCATION A 
+    JOIN US_STATES S ON A.STATE_ID = S.STATE_ID
+    JOIN DIVISIONS D ON S.DIV_ID = D.DIV_ID
+    GROUP BY D.DIVISION
+    ORDER BY COUNT(A.AUTHOR_ID) DESC
+    """
+
+    df = pd.read_sql_query(query, cnx)
+
+    chart = alt.Chart(df).mark_bar(color='#2182bd').encode(
+        y=alt.Y('DIVISION:N', axis=alt.Axis(grid=False, title='US Division'), sort='-x'),
+        x=alt.X('ACOUNT:Q', title="Authors with Set Locations")
+    ).properties(height=400, width=600)
+
+    save(chart, "output_data/division_author_count.html")
+
