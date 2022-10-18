@@ -135,7 +135,7 @@ def generate_report():
     <br>
     bottom shows the sentiment trend. Selecting a segment on the top will allow you to focus on a section below. Selecting an emotion will 
     <br>
-    filter all others. Press F5 or reload to reset the chart. This chart can help isolate spikes in emotions based on twitter users' exposure to new information 
+    filter all others. Press F5 or reload to reset the chart. This chart can help isolate spikes in emotions based on Twitter users' exposure to new information 
     <br>
     in the timeline.
     <br> 
@@ -151,7 +151,7 @@ def generate_report():
     <br>
     <br>
     <h2> Hashtags </h2>
-    This chart shows the hashtag use by volume. A hashtag-driven topic is immediately popular at a particular time, these may provide 
+    This chart shows the hashtag use by volume. A hashtag-driven topic is immediately popular at a particular time; these may provide 
     <br>
     good alternate search terms.
     <br> 
@@ -161,9 +161,9 @@ def generate_report():
     <br>
     This data represents users who entered enough location data to identify their home state and does not reflect the location of a user 
     <br>
-    at the time they created a tweet.You will notice that tweet volume is lower in this section. Lower tweet volume by location may is 
+    at the time they created a tweet. You will notice that tweet volume is lower in this section. Lower tweet volume by location is 
     <br>
-    dependent to the number of users with a set locations.
+    dependent on the number of users with a set location.
     <br>
     <iframe src="output_data/division_author_count.html" width="950" height="450" frameBorder="0">></iframe>
     <br>
