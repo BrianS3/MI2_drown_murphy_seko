@@ -101,11 +101,11 @@ def generate_report():
     f = open('Sentiment_Report.html', 'w')
 
     html_template = f"""
-    <h1>Tweet Sentiment Report</h1>
+    <h1>Tweet Emotional Response Report</h1>
     <p>
-    Search Term: {results[0][0]}
+    Original Search Term: {results[0][0]}
     <br>
-    Associated Terms: {', '.join([x[0] for x in results5])}
+    All Search Terms: {', '.join([x[0] for x in results5])}
     <br>
     Start Date: {results[0][2]}
     <br>
@@ -128,7 +128,7 @@ def generate_report():
     <br>
     <iframe src="output_data/simple_trend.html" width="950" height="300" frameBorder="0">></iframe>
     <br>
-    The a trend analysis of this search term indicates volume is <b>{trend}</b>. This trend is <b>{trend_term}</b> a general increase of <i>{round(slope,2)}</i> tweets per day.
+    The trend analysis of this search term indicates volume is <b>{trend}</b>. This trend is <b>{trend_term}</b> a general increase of <i>{round(slope,2)}</i> tweets per day.
     <br>
     <br>
     The following chart can be used to see how much a trend is growing or shrinking. The top half shows the average tweet volume per day, and the 
@@ -437,8 +437,8 @@ def interactive_tweet_trends():
         title={
             "text": ["Tweet Volume and Sentiment Over Time"],
             "subtitle": ["",
-                         "I'm Interactive, select a section on the bar chart to zoom in on sentiment values",
-                         "Select an emotion to focus", ""]}
+                         "I'm Interactive! Select a section on the bar chart to zoom in on sentiment values.",
+                         "Select an emotion to focus.", ""]}
     )
 
     save(out, "output_data/interactive_tweet_trends.html")
