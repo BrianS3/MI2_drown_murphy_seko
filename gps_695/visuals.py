@@ -101,7 +101,7 @@ def generate_report():
     f = open('Sentiment_Report.html', 'w')
 
     html_template = f"""
-    <h1>Tweet Emotional Response Report</h1>
+    <h1>TweetERA Report</h1>
     <p>
     Original Search Term: {results[0][0]}
     <br>
@@ -165,12 +165,11 @@ def generate_report():
     <br>
     dependent on the number of users with a set location.
     <br>
-    <iframe src="output_data/division_author_count.html" width="950" height="450" frameBorder="0">></iframe>
-    <br>
-    <br>
     <iframe src="output_data/emo_choropleth.html" width="1000" height="600" frameBorder="0">></iframe>
     <br>
     <iframe src="output_data/animated_emo_choropleth.html" width="1000" height="600" frameBorder="0">></iframe>
+    <br>
+    <iframe src="output_data/division_author_count.html" width="950" height="400" frameBorder="0">></iframe>
     <br>
     <iframe src="output_data/emotion_by_div_reg.html" width="1200" height="2000" frameBorder="0">></iframe>
     """
