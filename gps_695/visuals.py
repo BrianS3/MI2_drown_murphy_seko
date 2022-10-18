@@ -264,7 +264,6 @@ def forecast_chart():
     '''
     from gps_695 import database as d
     import pandas as pd
-    import numpy as np
     from statsmodels.tsa.arima.model import ARIMA
     import datetime
     import altair as alt
@@ -290,6 +289,7 @@ def forecast_chart():
     y_pred_df = y_pred.conf_int(alpha = 0.05)
     y_pred_df["Predictions"] = ARIMAmodel.predict(start = y_pred_df.index[0], end = y_pred_df.index[-1])
     y_pred_df['CREATED'] = x_dates
+    y_pred_df.loc[len(y_pred_df)] = [None,None,df.iat[-1, 0], df.iat[-1,1]]
 
     df = pd.concat([df,y_pred_df])
     lines = alt.Chart(df).mark_line().encode(
