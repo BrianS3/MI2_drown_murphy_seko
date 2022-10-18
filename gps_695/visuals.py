@@ -604,7 +604,7 @@ def division_author_count():
     chart = alt.Chart(df, title="Authors with Set Locations").mark_bar(color='#2182bd').encode(
         y=alt.Y('DIVISION:N', axis=alt.Axis(grid=False, title='US Division'), sort='-x'),
         x=alt.X('ACOUNT:Q', title="Author Count")
-    ).properties(height=350, width=600)
+    ).properties(height=300, width=600)
 
     save(chart, "output_data/division_author_count.html")
 
