@@ -601,7 +601,7 @@ def division_author_count():
 
     df = pd.read_sql_query(query, cnx)
 
-    chart = alt.Chart(df).mark_bar(color='#2182bd', title="Authors with Set Locations").encode(
+    chart = alt.Chart(df, title="Authors with Set Locations").mark_bar(color='#2182bd').encode(
         y=alt.Y('DIVISION:N', axis=alt.Axis(grid=False, title='US Division'), sort='-x'),
         x=alt.X('ACOUNT:Q', title="Author Count")
     ).properties(height=475, width=600)
