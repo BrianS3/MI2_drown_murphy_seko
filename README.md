@@ -160,13 +160,24 @@ df = pd.read_sql_query(query, cnx)
 ## Checking Pytrends
 This package has a feature that allows you to find out if a specific term or phrase is trending before executing a full run. Calling check_trend will display an analysis from Google Trends for the past 12 months. Google Trends uses Twitter as a resource, and this may help you evaluate the right keyword or phrase to run for your analysis.
 
-```commandline
+```
 from gps_695 import visuals as v
 v.check_trend("hello") #single word analysis
 
 v.check_trend("hello", "goodbye", "nice to meet you") #or put in multiple words
 ```
 
+To get a full analysis of your tweets use the generate_report function. A html report called "Sentiment_Report.html" will be generated in your current working directory.
+
+```
+from gps_695 import credentials as c
+from gps_695 import visuals as v
+
+c.load_env_credentials()
+v.generate_report()
+```
+
+All outputs from the modeling and visualization process can be found in your current working directory under "output_data".
 
 # FAQs
 1) How long does the package take to run?
@@ -195,14 +206,23 @@ v.check_trend("hello", "goodbye", "nice to meet you") #or put in multiple words
 
 Common errors that you may encounter:
 
-1) Users may experience issues with the NLTK library. Corpora needed to process text may not be properly installed.
+1) Common errors can be resolved if credentials.load_env_credentials() has not been called in your current session. Many IDEs and python environment require you to import credentials for each session. If you are experiencing SQL errors, API requests being blocked, or general issues, make sure to run the following before any other code:
+
+```
+from gps_695 import credentials as c
+
+c.load_env_credentials()
+```
+
+
+2) Users may experience issues with the NLTK library. Corpora needed to process text may not be properly installed.
 
     See https://www.nltk.org/data.html for more information to find instruction on how to download the correct corpus. The traceback message will contain the missing file, such as:
     "Resource omw-1.4 not found."
 
     ![](assets\nltk_error_pic_1.png)
 
-2) Freeze Support
+3) Freeze Support
 
     ```
     freeze_support()
