@@ -1,0 +1,17 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@4.17.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+</head>
+<body>
+<div class="vega-visualization" id="vega-visualization-26dd3081b4ce4e92a259777293da180a"></div>
+<script type="text/javascript">
+  const spec = {"config": {"view": {"continuousWidth": 400, "continuousHeight": 300}}, "layer": [{"mark": "point", "encoding": {"x": {"axis": {"grid": false, "title": "Date Created"}, "field": "CREATED", "type": "temporal"}, "y": {"axis": {"grid": true, "title": "Average Tweet Volume"}, "field": "AVG_T", "type": "quantitative"}}}, {"mark": {"type": "line", "color": "red"}, "encoding": {"x": {"axis": {"grid": false, "title": "Date Created"}, "field": "CREATED", "type": "temporal"}, "y": {"axis": {"grid": true, "title": "Average Tweet Volume"}, "field": "AVG_T", "type": "quantitative"}}, "transform": [{"on": "CREATED", "regression": "AVG_T"}]}], "data": {"name": "data-94fa3cb871e3edb08339d21ef84c1125"}, "height": 200, "width": 700, "$schema": "https://vega.github.io/schema/vega-lite/v4.17.0.json", "datasets": {"data-94fa3cb871e3edb08339d21ef84c1125": [{"CREATED": "2022-09-24", "AVG_T": 187.3333}, {"CREATED": "2022-09-25", "AVG_T": 192.0}, {"CREATED": "2022-09-26", "AVG_T": 190.3333}, {"CREATED": "2022-09-27", "AVG_T": 227.0}, {"CREATED": "2022-09-28", "AVG_T": 233.6667}, {"CREATED": "2022-09-29", "AVG_T": 271.3333}, {"CREATED": "2022-09-30", "AVG_T": 211.6667}, {"CREATED": "2022-10-01", "AVG_T": 223.0}, {"CREATED": "2022-10-02", "AVG_T": 280.3333}, {"CREATED": "2022-10-03", "AVG_T": 254.3333}, {"CREATED": "2022-10-04", "AVG_T": 242.3333}, {"CREATED": "2022-10-05", "AVG_T": 256.6667}, {"CREATED": "2022-10-06", "AVG_T": 234.0}, {"CREATED": "2022-10-07", "AVG_T": 237.6667}, {"CREATED": "2022-10-08", "AVG_T": 283.0}, {"CREATED": "2022-10-09", "AVG_T": 288.0}, {"CREATED": "2022-10-10", "AVG_T": 268.0}, {"CREATED": "2022-10-11", "AVG_T": 161.3333}, {"CREATED": "2022-10-12", "AVG_T": 203.5}, {"CREATED": "2022-10-13", "AVG_T": 223.6667}, {"CREATED": "2022-10-14", "AVG_T": 178.0}, {"CREATED": "2022-10-15", "AVG_T": 239.0}, {"CREATED": "2022-10-16", "AVG_T": 378.0}, {"CREATED": "2022-10-17", "AVG_T": 303.6667}, {"CREATED": "2022-10-18", "AVG_T": 275.6667}, {"CREATED": "2022-10-19", "AVG_T": 407.0}]}};
+  const embedOpt = {};
+  vegaEmbed('#vega-visualization-26dd3081b4ce4e92a259777293da180a', spec, embedOpt).catch(console.error);
+</script>
+</body>
+</html>
